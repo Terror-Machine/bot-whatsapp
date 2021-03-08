@@ -1,0 +1,402 @@
+{
+  "addwhitelist": {
+    "coms": "addwhitelist",
+    "pkg": "",
+    "id": ""
+  },
+  "delwhitelist": {
+    "coms": "delwhitelist",
+    "pkg": "",
+    "id": ""
+  },
+  "maintenance on": {
+    "coms": "maintenance on",
+    "pkg": "",
+    "id": ""
+  },
+  "maintenance off": {
+    "coms": "maintenance off",
+    "pkg": "",
+    "id": ""
+  },
+  "clearcache": {
+    "coms": "clearcache",
+    "pkg": "",
+    "id": ""
+  },
+  "upcoms": {
+    "coms": "upcoms",
+    "pkg": "",
+    "id": ""
+  },
+  "spam": {
+    "coms": "spam",
+    "pkg": "",
+    "id": ""
+  },
+  "allcommands": {
+    "coms": "cmd",
+    "pkg": "",
+    "id": ""
+  },
+  "resetin limit": {
+    "coms": "resetin limit",
+    "pkg": "",
+    "id": ""
+  },
+  "ubah": {
+    "coms": "ubah",
+    "pkg": "",
+    "id": ""
+  },
+  "addsticker": {
+    "coms": "addsticker",
+    "pkg": "",
+    "id": ""
+  },
+  "delsticker": {
+    "coms": "delsticker",
+    "pkg": "",
+    "id": ""
+  },
+  "addaudio": {
+    "coms": "addaudio",
+    "pkg": "",
+    "id": ""
+  },
+  "delaudio": {
+    "coms": "delaudio",
+    "pkg": "",
+    "id": ""
+  },
+  "deleteall": {
+    "coms": "deleteall",
+    "pkg": "",
+    "id": ""
+  },
+  "x": {
+    "coms": "x",
+    "pkg": "",
+    "id": ""
+  },
+  "nbc": {
+    "coms": "nbc",
+    "pkg": "",
+    "id": ""
+  },
+  "wbc": {
+    "coms": "wbc",
+    "pkg": "",
+    "id": ""
+  },
+  "listbot": {
+    "coms": "listbot",
+    "pkg": "",
+    "id": ""
+  },
+  "addbot": {
+    "coms": "addbot",
+    "pkg": "",
+    "id": ""
+  },
+  "delbot": {
+    "coms": "delbot",
+    "pkg": "",
+    "id": ""
+  },
+  "resetbot": {
+    "coms": "resetbot",
+    "pkg": "",
+    "id": ""
+  },
+  "listowner": {
+    "coms": "listowner",
+    "pkg": "",
+    "id": ""
+  },
+  "addowner": {
+    "coms": "addowner",
+    "pkg": "",
+    "id": ""
+  },
+  "delowner": {
+    "coms": "delowner",
+    "pkg": "",
+    "id": ""
+  },
+  "resetowner": {
+    "coms": "resetowner",
+    "pkg": "",
+    "id": ""
+  },
+  "speed": {
+    "coms": "speed",
+    "pkg": "",
+    "id": ""
+  },
+  "banchat on": {
+    "coms": "banchat on",
+    "pkg": "",
+    "id": ""
+  },
+  "banchat off": {
+    "coms": "banchat off",
+    "pkg": "",
+    "id": ""
+  },
+  "autojoin on": {
+    "coms": "autojoin on",
+    "pkg": "",
+    "id": ""
+  },
+  "autojoin off": {
+    "coms": "autojoin off",
+    "pkg": "",
+    "id": ""
+  },
+  "stats": {
+    "coms": "stats",
+    "pkg": "",
+    "id": ""
+  },
+  "runtime": {
+    "coms": "runtime",
+    "pkg": "",
+    "id": ""
+  },
+  "upname": {
+    "coms": "upname",
+    "pkg": "",
+    "id": ""
+  },
+  "upstatus": {
+    "coms": "upstatus",
+    "pkg": "",
+    "id": ""
+  },
+  "setprofilepic": {
+    "coms": "setprofilepic",
+    "pkg": "",
+    "id": ""
+  },
+  "upapikey1": {
+    "coms": "upapikey1",
+    "pkg": "",
+    "id": ""
+  },
+  "upapikey2": {
+    "coms": "upapikey2",
+    "pkg": "",
+    "id": ""
+  },
+  "upsnobg": {
+    "coms": "upsnobg",
+    "pkg": "",
+    "id": ""
+  },
+  "upbotname": {
+    "coms": "upbotname",
+    "pkg": "",
+    "id": ""
+  },
+  "upowncon": {
+    "coms": "upowncon",
+    "pkg": "",
+    "id": ""
+  },
+  "upconsnobg": {
+    "coms": "upconsnobg",
+    "pkg": "",
+    "id": ""
+  },
+  "uptext": {
+    "coms": "uptext",
+    "pkg": "",
+    "id": ""
+  },
+  "upsname": {
+    "coms": "upsname",
+    "pkg": "",
+    "id": ""
+  },
+  "uprname": {
+    "coms": "uprname",
+    "pkg": "",
+    "id": ""
+  },
+  "suggest": {
+    "coms": "suggest",
+    "pkg": "",
+    "id": ""
+  },
+  "chatbot": {
+    "coms": "chatbot",
+    "pkg": "",
+    "id": ""
+  },
+  "mygroup": {
+    "coms": "mygroup",
+    "pkg": "",
+    "id": ""
+  },
+  "changememberlimit": {
+    "coms": "changememberlimit",
+    "pkg": "",
+    "id": ""
+  },
+  "changegrouplimit": {
+    "coms": "changegrouplimit",
+    "pkg": "",
+    "id": ""
+  },
+  "changepremiumlimit": {
+    "coms": "changepremiumlimit",
+    "pkg": "",
+    "id": ""
+  },
+  "changelimit": {
+    "coms": "changelimit",
+    "pkg": "",
+    "id": ""
+  },
+  "resetlimitall": {
+    "coms": "resetlimitall",
+    "pkg": "",
+    "id": ""
+  },
+  "premium": {
+    "coms": "premium",
+    "pkg": "",
+    "id": ""
+  },
+  "vip": {
+    "coms": "vip",
+    "pkg": "",
+    "id": ""
+  },
+  "lwhite": {
+    "coms": "lwhite",
+    "pkg": "",
+    "id": ""
+  },
+  "dwhite": {
+    "coms": "dwhite",
+    "pkg": "",
+    "id": ""
+  },
+  "listblock": {
+    "coms": "listblock",
+    "pkg": "",
+    "id": ""
+  },
+  "unblockall": {
+    "coms": "unblockall",
+    "pkg": "",
+    "id": ""
+  },
+  "listadmin": {
+    "coms": "listadmin",
+    "pkg": "",
+    "id": ""
+  },
+  "listmute": {
+    "coms": "listmute",
+    "pkg": "",
+    "id": ""
+  },
+  "delmute": {
+    "coms": "delmute",
+    "pkg": "",
+    "id": ""
+  },
+  "silent": {
+    "coms": "silent",
+    "pkg": "",
+    "id": ""
+  },
+  "unsilent": {
+    "coms": "unsilent",
+    "pkg": "",
+    "id": ""
+  },
+  "resetmute": {
+    "coms": "resetmute",
+    "pkg": "",
+    "id": ""
+  },
+  "listblack": {
+    "coms": "listblack",
+    "pkg": "",
+    "id": ""
+  },
+  "delblack": {
+    "coms": "delblack",
+    "pkg": "",
+    "id": ""
+  },
+  "listwhite": {
+    "coms": "listwhite",
+    "pkg": "",
+    "id": ""
+  },
+  "whitelistadd": {
+    "coms": "whitelistadd",
+    "pkg": "",
+    "id": ""
+  },
+  "whitelistdel": {
+    "coms": "whitelistdel",
+    "pkg": "",
+    "id": ""
+  },
+  "resetwhitelist": {
+    "coms": "resetwhitelist",
+    "pkg": "",
+    "id": ""
+  },
+  "listmimic": {
+    "coms": "listmimic",
+    "pkg": "",
+    "id": ""
+  },
+  "addmimic": {
+    "coms": "addmimic",
+    "pkg": "",
+    "id": ""
+  },
+  "delmimic": {
+    "coms": "delmimic",
+    "pkg": "",
+    "id": ""
+  },
+  "resetmimic": {
+    "coms": "resetmimic",
+    "pkg": "",
+    "id": ""
+  },
+  "mimic on": {
+    "coms": "mimic on",
+    "pkg": "",
+    "id": ""
+  },
+  "mimic off": {
+    "coms": "mimic off",
+    "pkg": "",
+    "id": ""
+  },
+  "leaveall": {
+    "coms": "leaveall",
+    "pkg": "",
+    "id": ""
+  },
+  "clearall": {
+    "coms": "clearall",
+    "pkg": "",
+    "id": ""
+  },
+  "broadcast": {
+    "coms": "broadcast",
+    "pkg": "",
+    "id": ""
+  }
+}

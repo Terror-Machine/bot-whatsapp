@@ -1,0 +1,6 @@
+{
+  "video": {
+    "hi": "./database/hi.oga",
+    "bot": "./database/bot.oga"
+  }
+}

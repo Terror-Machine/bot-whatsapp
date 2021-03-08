@@ -1,0 +1,41 @@
+{
+  "admin": "6281286118629@s.whatsapp.net",
+  "vhkey": "123jnrifn134ninaif3i",
+  "itechkey": "restugbk-itechnologi-11012021",
+  "snobg": "6281286118629@s.whatsapp.net",
+  "nobg": "FzCXYed33PmmgjcDtAXCyaeT",
+  "autocommand": "follow instagram.com/wa.bot untuk update feature & reset limit! follow itu gratis, gak bayar!",
+  "botname": "FNBOTS",
+  "rname": ".",
+  "sname": "/",
+  "sAdmin": [
+    "6281286118629@s.whatsapp.net"
+  ],
+  "restartState": false,
+  "restartId": "undefined",
+  "banChats": true,
+  "autojoin": false,
+  "mtc": false,
+  "totalhitcount": 6822244,
+  "limitCount": 50,
+  "limitCountPrem": 100,
+  "memberLimit": 1,
+  "groupLimit": 500,
+  "changer": false,
+  "filter": false,
+  "memec": [],
+  "premium": [
+    "6281286118629@s.whatsapp.net"
+  ],
+  "whitelist": [
+    "6281286118629-1611946735@g.us"
+  ],
+  "banned": [],
+  "limit": [],
+  "hitcount": [],
+  "muted": [],
+  "mutelist": [],
+  "chat": {},
+  "chatbot": true,
+  "autocorrect": 0
+}
