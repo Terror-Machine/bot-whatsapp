@@ -1,15 +1,15 @@
 {
-  "admin": "6281286118629@s.whatsapp.net",
+  "admin": "6285712453005@s.whatsapp.net",
   "vhkey": "123jnrifn134ninaif3i",
   "itechkey": "restugbk-itechnologi-11012021",
-  "snobg": "6281286118629@s.whatsapp.net",
+  "snobg": "6285712453005@s.whatsapp.net",
   "nobg": "FzCXYed33PmmgjcDtAXCyaeT",
-  "autocommand": "follow instagram.com/wa.bot untuk update feature & reset limit! follow itu gratis, gak bayar!",
+  "autocommand": "follow instagram.com/fnbots untuk update feature & reset limit! follow itu gratis, gak bayar!",
   "botname": "FNBOTS",
   "rname": ".",
   "sname": "/",
   "sAdmin": [
-    "6281286118629@s.whatsapp.net"
+    "6285712453005@s.whatsapp.net"
   ],
   "restartState": false,
   "restartId": "undefined",
@@ -25,11 +25,9 @@
   "filter": false,
   "memec": [],
   "premium": [
-    "6281286118629@s.whatsapp.net"
+    "6285712453005@s.whatsapp.net"
   ],
-  "whitelist": [
-    "6281286118629-1611946735@g.us"
-  ],
+  "whitelist": [],
   "banned": [],
   "limit": [],
   "hitcount": [],

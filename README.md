@@ -2,31 +2,29 @@
 
 ## Hi everyone! 
 
-I trying to create script whatsapp bot using [open-wa](https://github.com/open-wa/wa-automate-nodejs) library.
-
-## Group Whatsapp?
-[Here!](https://chat.whatsapp.com/BHGFVfkv9toKBgNgtoJffb)
+I trying to create script whatsapp bot using [Baileys](https://github.com/WhiskeySockets/Baileys) library.
 
 ## Requirements:
 ```
-nodejs 12.xxx
-npm 6.xxx
+nodejs 20.19.1
+npm 11.3.0
 ```
 
 ## Installation Using Linux-Ubuntu:
 ## IDK if you use RDP or other. because i never use
 ```
 sudo apt-get install -y git
-git clone https://github.com/Terror-Machine/fnbots
-cd fnbots
-bash run.sh
+git clone https://github.com/Terror-Machine/bot-whatsapp
+cd bot-whatsapp
+npm i
+npm start
 ```
 ## NOTE!
 This script is made for public bots, so use a second account to scan the qr and main account to command.
 
 ## as an example to be used as a reference:
 ## but please dont equate the bot templates, use your own ideas!!!
-- [FNBots](https://https://api.whatsapp.com/send?phone=6288239049722&text=.commands)
+- [FNBots](https://https://api.whatsapp.com/send?phone=6285712453005&text=.commands)
 
 ## Thanks to:
-- [open-wa](https://github.com/open-wa/wa-automate-nodejs)
+- [Baileys](https://github.com/WhiskeySockets/Baileys)
