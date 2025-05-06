@@ -1,20 +1,17 @@
 const {
-  WAConnection,
-  MessageType,
-  Presence,
-  MessageOptions,
-  Mimetype,
-  WALocationMessage,
-  WA_MESSAGE_STUB_TYPES,
-  RefnectMode,
-  ProxyAgent,
-  waChatKey,
-  ChatModification,
-} = require("@adiwajshing/baileys");
+  default: makeWASocket,
+  downloadContentFromMessage,
+  DisconnectReason,
+  useMultiFileAuthState,
+  getContentType,
+  fetchLatestBaileysVersion
+} = require('@whiskeysockets/baileys');
+const path = "./session/";
+const pino = require('pino');
 const qrcode = require("qrcode-terminal");
 const imageToBase64 = require('image-to-base64');
 const syntaxerror = require('syntax-error')
-const path = require('path')
+const path2 = require('path')
 const {
   forever
 } = require('async')
@@ -3485,19 +3482,61 @@ process.on('unhandledRejection', (reason, promise) => {
 
 
 //-----------------------core--------------------//
+let processedMessages = new Set();
 async function starts() {
-  const fn = new WAConnection()
-  fn.on('qr', qr => {
-    console.log('FNBOTS AUTHENTICATING....');
-    qrcode.generate(qr, {
-      small: true
-    });
+  const { state, saveCreds } = await useMultiFileAuthState("./session");
+
+  const fn = makeWASocket({
+    logger: pino({ level: "silent" }),
+    printQRInTerminal: true,
+    auth: state
   });
-  fn.on('credentials-updated', () => {
-    const authInfo = fn.base64EncodedAuthInfo()
-    fs.writeFileSync('./fnbots.json', JSON.stringify(authInfo, null, '\t'))
-  })
-  fs.existsSync('./fnbots.json') && fn.loadAuthInfo('./fnbots.json')
+
+  if (typeof saveCreds === "function") {
+    fn.ev.on("creds.update", saveCreds);
+  } else {
+    console.error("❌ ERROR: saveCreds bukan fungsi yang valid.");
+  }
+
+  fn.ev.on('connection.update', (update) => {
+    const { connection, lastDisconnect, qr } = update;
+    if (qr) {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`;
+      console.log(`📌 Scan QR Code di browser: ${qrUrl}`);
+    }
+    if (connection === 'close') {
+      if (lastDisconnect?.error?.output?.statusCode === DisconnectReason.loggedOut) {
+        console.log("❌ Sesi kadaluarsa! Silakan scan ulang QR Code.");
+        process.exit();
+      } else {
+        console.log("🔄 Bot terputus, mencoba menyambung ulang...");
+        starts();
+      }
+    } else if (connection === "open") {
+      setInterval(() => {
+        fs.readdir(path, (err, files) => {
+          if (err) return console.error("❌ Error membaca folder session:", err);
+
+          let deletedFiles = [];
+
+          files.forEach(file => {
+            if (file !== "creds.json") {
+              fs.unlink(`${path}/${file}`, (err) => {
+                if (!err) deletedFiles.push(file);
+              });
+            }
+          });
+
+          setTimeout(() => {
+            if (deletedFiles.length > 0) {
+              console.log(`🗑️ Menghapus ${deletedFiles.length} file session`);
+            }
+          }, 1000);
+        });
+      }, 5 * 60 * 1000);
+      console.log(`\x1b[32m✅ Bot WhatsApp Terhubung!\x1b[0m`);
+    }
+  });
 
   if (isRestart === true) {
     fn.connect().then(() => {
@@ -3540,26 +3579,38 @@ async function starts() {
   })))
   console.log('---------------------------------------------------------------------------')
 
-  fn.on('message-new', async(m) => {
+  fn.ev.on('messages.upsert', async (m) => {
     try {
       await fnbots(fn, m, false)
     } catch (error) {
       console.log(error.message)
     }
-    /*
-    try {
-      await coligai(fn, m)
-    } catch (error) {
-      console.log(error.message)
-    }
-    */
   });
+  
   fn.on('CB:Blocklist', json => {
     if (blocked.length > 2) return
     for (let i of json[1].blocklist) {
       blocked.push(i.replace('c.us', 's.whatsapp.net'))
     }
   })
+}
+
+
+async function starts() {
+  const fn = new WAConnection()
+  fn.on('qr', qr => {
+    console.log('FNBOTS AUTHENTICATING....');
+    qrcode.generate(qr, {
+      small: true
+    });
+  });
+  fn.on('credentials-updated', () => {
+    const authInfo = fn.base64EncodedAuthInfo()
+    fs.writeFileSync('./fnbots.json', JSON.stringify(authInfo, null, '\t'))
+  })
+  fs.existsSync('./fnbots.json') && fn.loadAuthInfo('./fnbots.json')
+
+  
 }
 
 //-----------------------util--------------------//
