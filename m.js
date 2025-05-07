@@ -1,105 +1,63 @@
 const {
   default: makeWASocket,
-  downloadContentFromMessage,
-  DisconnectReason,
+  delay,
+  PHONENUMBER_MCC,
+  makeCacheableSignalKeyStore,
   useMultiFileAuthState,
-  getContentType,
-  fetchLatestBaileysVersion
-} = require('@whiskeysockets/baileys');
-const path = "./session/";
-const pino = require('pino');
-const qrcode = require("qrcode-terminal");
-const imageToBase64 = require('image-to-base64');
-const syntaxerror = require('syntax-error')
-const path2 = require('path')
-const {
-  forever
-} = require('async')
+  DisconnectReason,
+  fetchLatestBaileysVersion,
+  generateForwardMessageContent,
+  prepareWAMessageMedia, 
+  generateWAMessageFromContent,
+  generateMessageID,
+  ownloadContentFromMessage,
+  makeInMemoryStore,
+  jidDecode,
+  proto,
+  Browsers,
+  getContentType
+} = require("@whiskeysockets/baileys")
+
 const {
   RemoveBgResult,
   removeBackgroundFromImageBase64
 } = require('remove.bg')
+
 const {
   createWriteStream
 } = require('fs-extra')
-const {
-  getVideoMeta
-} = require('tiktok-scraper')
-const wrap1 = require('word-wrapper')
-const puppeteer = require('puppeteer')
-const Jimp = require('jimp');
+
+const readline = require("readline")
+const { parsePhoneNumber } = require("libphonenumber-js")
+const NodeCache = require("node-cache")
+const path = "./session/";
+const pino = require('pino');
+const Pino = require("pino")
+const chalk = require('chalk')
+const FileType = require('file-type')
+const PhoneNumber = require('awesome-phonenumber')
 const mime = require('mime-types');
-const http = require('http')
-const https = require('https')
-const os = require('os')
-const {
-  stdout
-} = require('process')
 const process = require('process');
 const fs = require('fs-extra')
 const util = require('util')
-const fqs = require('fs')
 const moment = require('moment-timezone')
 const moments = require('moment')
 const ms = require('parse-ms')
 const toMs = require('ms')
 const momenSetup = require('moment-duration-format');
-const animeQuotes = require('animequotes')
 const axios = require('axios')
 const fetch = require('node-fetch')
-const cheerio = require('cheerio')
-const chalk = require('chalk');
-const readlineSync = require('readline-sync');
 const request = require('request')
 const difflib = require('difflib');
-const translatte = require('translatte');
-const ytdl = require('ytdl-core')
 const figlet = require('figlet');
-const parseString = require('xml2js').parseString;
 const cron = require('node-cron');
-const get = require('got')
-const bent = require('bent')
-const gplay = require('google-play-scraper');
-const TikTokScraper = require('tiktok-scraper')
-const htmlToText = require('html-to-text');
-const tesseract = require('node-tesseract-ocr')
 const sharp = require('sharp')
-const videoUrlLink = require('video-url-link')
-const qs = require('qs');
 const fromBuffer = require('file-type')
 const FormData = require('form-data')
-const striptags = require('striptags');
-const text2png = require('text2png');
-const urlencode = require('urlencode');
-const YoutubeMp3Downloader = require('youtube-mp3-downloader');
-const yts = require('yt-search')
-const Math_js = require('mathjs');
-const nsfw = require('nsfwjs')
-const tf = require('@tensorflow/tfjs-node')
-const google = require('google-it')
 const sort = require('arr-sort')
-const matchGroup = require('match-index')
-const Scrap = require('./db/scrap');
 const { execSync } = require('child_process');
-const {
-  letterTrans,
-  wordTrans
-} = require('custom-translate');
-const sagiri = require('sagiri')
-const saus = sagiri('d9c707d9f234ca590c6a5d88b39c268d587d29cb', {
-  results: 5
-})
-const twtGetInfo = util.promisify(videoUrlLink.twitter.getInfo)
-const igGetInfo = util.promisify(videoUrlLink.instagram.getInfo)
-const timenjing = moment().format('LTS')
-const ytCookie = "CONSENT=YES+ID.en+20180401-18-0; VISITOR_INFO1_LIVE=ViQOO-Gcyh4; PREF=al=en&f5=30000; YSC=X3r_zeJBiI4; GPS=1; HSID=AEeoRahigB8EnfmU8; SSID=AKBbgRjGxFYUb1Gbl; APISID=3xwj8YtQ4sNSh51U/Aw3-DcZA_MOo-CU_F; SAPISID=lw9x9XlYDZR66vlt/A8G6JpiwOlhyDVN4k; __Secure-3PAPISID=lw9x9XlYDZR66vlt/A8G6JpiwOlhyDVN4k; LOGIN_INFO=AFmmF2swRQIhALfhTSroRwI8bu4jqzcixiMajQCEbXHLGcWhB1T5we5pAiBjIl3tb6ed9690xkkIHLwqR7plWrOwikKfC7zH5jxBNA:QUQ3MjNmejBxeTEwelF5TGFBQkk3X1A5X0pCcW1rN3l1TkVDMDJRaEQ5bmI5RnIyUHhnQ21BTkhUV0s5OGNraXItd2JpSkp4N0VVYlhVMERHd1kyUlFQZVd5eUp0LTB1dTB2V1NwNjNHQmFUWlZKeWpYQnUtVjdYNnQxQTB2cVB3QkFMSlVGM2FmelRrbktVak5PTkhZMFlPSDVIMS1jRjFULVhJcEFSd1duY2h0VjIxSlhoS2hNbTIzR2k4TFZCUm4yNWhvX1RYTVFz; YTC=liv|1607586083; SID=4gfOrn4Uhl-ScvnKYbFWNlGeXDlTgLtTZQbYsrCQsTpD0RIOKMBlQquUrsbffOYy7oWB9A.; __Secure-3PSID=4gfOrn4Uhl-ScvnKYbFWNlGeXDlTgLtTZQbYsrCQsTpD0RIO-8Wg-7yzLjvFV6X2hndJmQ.; SIDCC=AJi4QfE4U8kukROJyBcF_CBUAWgi5LDxHn9q_6kdkZzhQXmrq_ki8bBWP4sS29ZnG7nTdV5h; __Secure-3PSIDCC=AJi4QfGbQULPW9a8gyiInuxTdsWpbkrxyFifcSEyox9RWCfLTcPvRcZGFk66xL9IYyPd60aX"
-const ytIdentity = "QUFFLUhqbWtYTmloUWZ0Z1FmVEJpcHctUTlFMWMwcUoxQXw="
-const xts = require('node-gtts')('id');
-const sver = "8000"
 const pukimaki = "fnbots"
 const pukimak = "pm2 restart m"
-const scrap = new Scrap()
-xts.createServer(parseInt(sver));
 momenSetup(moments);
 
 let silent = false
@@ -605,16 +563,16 @@ function silhouetteImage(data) {
 const triggered = (buffer, id) => new Promise((resolve) => {
   canvas.trigger(buffer).then(async res => {
     await sleep(4000)
-    await fs.writeFile(`./image/asu.gif`, res).then(async() => {
+    await fs.writeFile(`./image/asu.gif`, res).then(async () => {
       ffmpeg({
-          source: './image/asu.gif'
-        })
+        source: './image/asu.gif'
+      })
         .inputFormat('gif')
         .addOutputOptions("-vcodec", "libwebp", "-vf", "crop=w='min(min(iw,ih),512)':h='min(min(iw,ih),512)',scale=150:150,setsar=1,fps=10", '-lossless', '1', "-loop", "1", "-preset", "default", "-an", "-vsync", "0", "-s", "200:200")
         .save(`./image/asu.webp`)
         .on('end', () => {
           let mediaData = (fs.readFileSync(`./image/asu.webp`)).toString('base64')
-          fs.unlink(`./image/asu.webp`, () => {})
+          fs.unlink(`./image/asu.webp`, () => { })
           return resolve(mediaData)
         })
         .on('error', (err) => console.log(err))
@@ -657,7 +615,7 @@ const fuse = (buffer1, buffer2) => new Promise((resolve) => {
   })
 })
 
-const deepfry = (buffer) => new Promise(async(resolve, reject) => {
+const deepfry = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const data = await loadImage(buffer);
     const canvas = createCanvas(data.width, data.height);
@@ -673,7 +631,7 @@ const deepfry = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const glitch = (buffer) => new Promise(async(resolve, reject) => {
+const glitch = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const data = await loadImage(buffer);
     const canvas = createCanvas(data.width, data.height);
@@ -689,7 +647,7 @@ const glitch = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const mataikan = (buffer) => new Promise(async(resolve, reject) => {
+const mataikan = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const data = await loadImage(buffer);
     const canvas = createCanvas(data.width, data.height);
@@ -705,7 +663,7 @@ const mataikan = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const mirror = (buffer) => new Promise(async(resolve, reject) => {
+const mirror = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const random = ['x', 'y', 'both'];
     const type = randomChoice(random)
@@ -732,7 +690,7 @@ const mirror = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const ghost = (buffer) => new Promise(async(resolve, reject) => {
+const ghost = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const data = await loadImage(buffer);
     const canvas = createCanvas(data.width, data.height);
@@ -750,7 +708,7 @@ const ghost = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const blur = (buffer) => new Promise(async(resolve, reject) => {
+const blur = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const data = await loadImage(buffer);
     const canvas = createCanvas(data.width, data.height);
@@ -766,7 +724,7 @@ const blur = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const approved = (buffer) => new Promise(async(resolve, reject) => {
+const approved = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const besa = fs.readFileSync('./image/approved.png')
     const base = await loadImage(besa);
@@ -790,7 +748,7 @@ const approved = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const challenge = (buffer) => new Promise(async(resolve, reject) => {
+const challenge = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const besa = fs.readFileSync('./image/challenger.png')
     const base = await loadImage(besa);
@@ -814,7 +772,7 @@ const challenge = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const beautiful = (buffer) => new Promise(async(resolve, reject) => {
+const beautiful = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const besa = fs.readFileSync('./image/beautiful.png')
     const base = await loadImage(besa);
@@ -835,7 +793,7 @@ const beautiful = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const rejected = (buffer) => new Promise(async(resolve, reject) => {
+const rejected = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const besa = fs.readFileSync('./image/rejected.png')
     const base = await loadImage(besa);
@@ -859,7 +817,7 @@ const rejected = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const subtitle = (buffer, text) => new Promise(async(resolve, reject) => {
+const subtitle = (buffer, text) => new Promise(async (resolve, reject) => {
   try {
     const base = await loadImage(buffer);
     const canvas = createCanvas(base.width, base.height);
@@ -891,7 +849,7 @@ const subtitle = (buffer, text) => new Promise(async(resolve, reject) => {
   }
 })
 
-const memegen = (top, bottom, image) => new Promise(async(resolve, reject) => {
+const memegen = (top, bottom, image) => new Promise(async (resolve, reject) => {
   try {
     const base = await loadImage(image);
     const canvas = createCanvas(base.width, base.height);
@@ -932,7 +890,7 @@ const memegen = (top, bottom, image) => new Promise(async(resolve, reject) => {
   }
 })
 
-const thuglife = (buffer) => new Promise(async(resolve, reject) => {
+const thuglife = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const base = await loadImage('./image/thug-life.png');
     const data = await loadImage(buffer);
@@ -952,7 +910,7 @@ const thuglife = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const burn = (burn) => new Promise(async(resolve) => {
+const burn = (burn) => new Promise(async (resolve) => {
   const base = await loadImage('./image/spongebob-burn.png');
   const canvas = createCanvas(base.width, base.height);
   const ctx = canvas.getContext('2d');
@@ -971,7 +929,7 @@ const burn = (burn) => new Promise(async(resolve) => {
   return resolve(formated)
 })
 
-const tobecontinue = (buffer) => new Promise(async(resolve, reject) => {
+const tobecontinue = (buffer) => new Promise(async (resolve, reject) => {
   try {
     const base = await loadImage('./image/to-be-continued.png');
     const data = await loadImage(buffer);
@@ -990,7 +948,7 @@ const tobecontinue = (buffer) => new Promise(async(resolve, reject) => {
   }
 })
 
-const memegen2 = (buffer, text) => new Promise(async(resolve, reject) => {
+const memegen2 = (buffer, text) => new Promise(async (resolve, reject) => {
   try {
     const base = await loadImage(buffer);
     const canvas = createCanvas(base.width, base.height);
@@ -1575,7 +1533,7 @@ function decode_utf8(s) {
 
 function bufferToStream(buffer) {
   const readable = new Readable()
-  readable._read = () => {}
+  readable._read = () => { }
   readable.push(buffer)
   readable.push(null)
   return readable
@@ -1590,12 +1548,12 @@ const sendGif = (id, buffers) => new Promise((resolve) => {
     .on('end', () => {
       stream.destroy()
       let mediaData = (fs.readFileSync(`./database/${id}.webp`)).toString('base64')
-      fs.unlink(`./database/${id}.webp`, () => {})
+      fs.unlink(`./database/${id}.webp`, () => { })
       return resolve(mediaData)
     })
 })
 
-const wait = async(media) => new Promise(async(resolve, reject) => {
+const wait = async (media) => new Promise(async (resolve, reject) => {
   const attachmentData = `data:image/jpeg;base64,${media.toString('base64')}`
   const response = await fetch("https://trace.moe/api/search", {
     method: "POST",
@@ -1620,13 +1578,13 @@ const wait = async(media) => new Promise(async(resolve, reject) => {
   resolve(dat);
 })
 
-const resizeImage = (buff, encode) => new Promise(async(resolve, reject) => {
+const resizeImage = (buff, encode) => new Promise(async (resolve, reject) => {
   const {
     mime
   } = await fromBuffer(buffData)
   sharp(buff, {
-      failOnError: false
-    })
+    failOnError: false
+  })
     .resize(512, 512)
     .toBuffer()
     .then(resizedImageBuffer => {
@@ -1639,7 +1597,7 @@ const resizeImage = (buff, encode) => new Promise(async(resolve, reject) => {
 })
 
 const uploadImages = (buffData, type) => {
-  return new Promise(async(resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const {
       ext
     } = await fromBuffer(buffData)
@@ -1653,9 +1611,9 @@ const uploadImages = (buffData, type) => {
       const form = new FormData()
       form.append('file', fileData, 'tmp.' + ext)
       fetch('https://telegra.ph/upload', {
-          method: 'POST',
-          body: form
-        })
+        method: 'POST',
+        body: form
+      })
         .then(res => res.json())
         .then(res => {
           if (res.error) return reject(res.error)
@@ -1667,29 +1625,13 @@ const uploadImages = (buffData, type) => {
   })
 }
 
-const endpoints = {
-  Global: 'https://covid19.mathdro.id/api/',
-  indoHarian: 'https://indonesia-covid-19.mathdro.id/api/harian',
-  statistikHarian: 'https://services5.arcgis.com/VS6HdKS0VfIhv8Ct/ArcGIS/rest/services/Statistik_Perkembangan_COVID19_Indonesia/FeatureServer/0/query?where=Jumlah_Kasus_Kumulatif+IS+NOT+NULL+AND+Jumlah_Pasien_Sembuh+IS+NOT+NULL+AND+Jumlah_Pasien_Meninggal+IS+NOT+NULL&outFields=*&orderByFields=Tanggal+desc&resultRecordCount=2&f=json',
-  statistikHarianAll: 'https://services5.arcgis.com/VS6HdKS0VfIhv8Ct/ArcGIS/rest/services/Statistik_Perkembangan_COVID19_Indonesia/FeatureServer/0/query?where=Jumlah_Kasus_Kumulatif+IS+NOT+NULL+AND+Jumlah_Pasien_Sembuh+IS+NOT+NULL+AND+Jumlah_Pasien_Meninggal+IS+NOT+NULL&outFields=*&orderByFields=Tanggal+asc&resultRecordCount=100&f=json',
-  dataUpdate: 'https://data.covid19.go.id/public/api/update.json',
-  dataProvinsi: 'https://data.covid19.go.id/public/api/prov.json',
-  dataKemkes: 'https://covid19.disiplin.id',
-  dataProvjabar: 'https://covid19-public.digitalservice.id/api/v1/rekapitulasi/jabar', // /harian?level=kab /kumulatif?level=prov
-  dataProvjabarKasus: 'https://covid19-public.digitalservice.id/api/v1/sebaran/jabar',
-  dataProvJateng: 'https://corona.jatengprov.go.id/data',
-  dataProvJatim: 'http://covid19dev.jatimprov.go.id/xweb/draxi',
-  dataBandung: 'https://covid19.bandung.go.id/api/covid19bdg/v1/covidsummary/get',
-  dataWismaAtlit: 'https://indonesia-covid-19.mathdro.id/api/wisma-atlet'
-}
-
 async function getBase64(url) {
   return new Promise((resolve, reject) => {
     fetch(url, {
-        headers: {
-          'User-Agent': 'okhttp/4.5.0'
-        }
-      })
+      headers: {
+        'User-Agent': 'okhttp/4.5.0'
+      }
+    })
       .then((response) => response.buffer())
       .then((result) => {
         const videoBase64 = `data:${result.headers.get('content-type')};base64,` + result.toString('base64')
@@ -1709,14 +1651,14 @@ async function GetImage(url, path) {
     res.body.on('error', (err) => {
       reject(err)
     })
-    fileStream.on('finish', function() {
+    fileStream.on('finish', function () {
       resolve()
     })
   })
 };
 
 async function fetchJson(url, options) {
-  return new Promise(async(resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     await fetch(url, options)
       .then(response => response.json())
       .then(json => {
@@ -1729,7 +1671,7 @@ async function fetchJson(url, options) {
 };
 
 async function fetchText(url, options) {
-  return new Promise(async(resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     await fetch(url, options)
       .then(response => response.text())
       .then(text => {
@@ -1791,35 +1733,22 @@ async function liriklagu(lagu) {
   if (json.status) return `Lirik Lagu ${lagu}\n\n${json.result.lirik}`
 }
 
-async function twitter(url) {
-  return new Promise(async(resolve, reject) => {
-    await twtGetInfo(url, {})
-      .then((content) => {
-        resolve(content)
-      })
-      .catch((err) => {
-        console.error(err)
-        reject(err)
-      })
-  })
-}
-
 async function removebg(base64img) {
-  return new Promise(async(resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     await removeBackgroundFromImageBase64({
-        base64img,
-        apiKey: settings.nobg,
-        size: 'preview',
-        type: 'auto',
-        format: 'jpg'
-      })
+      base64img,
+      apiKey: settings.nobg,
+      size: 'preview',
+      type: 'auto',
+      format: 'jpg'
+    })
       .then((result = RemoveBgResult) => resolve(`data:image/jpeg;base64,${result.base64img}`))
       .catch((err) => reject(JSON.stringify(err)))
   })
 }
 
 async function getZodiak(nama, tgl) {
-  return new Promise(async(resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     axios
       .get(`https://script.google.com/macros/exec?service=AKfycbw7gKzP-WYV2F5mc9RaR7yE3Ve1yN91Tjs91hp_jHSE02dSv9w&nama=${nama}&tanggal=${tgl}`)
       .then((response) => {
@@ -1841,7 +1770,7 @@ async function getZodiak(nama, tgl) {
 }
 
 async function cekResi(ekspedisi, resi) {
-  return new Promise(async(resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     await fetchJson(`https://api.terhambar.com/resi?resi=${resi}&kurir=${ekspedisi}`)
       .then((result) => {
         if (result.status.code != 200 && result.status.description != 'OK') return resolve(result.status.description)
@@ -1886,113 +1815,6 @@ const color = (text, color) => {
       return '\x1b[33m' + text + '\x1b[0m'
     default:
       return '\x1b[32m' + text + '\x1b[0m' // default is green
-  }
-}
-
-async function getGlobal() {
-  return new Promise(async(resolve, reject) => {
-    await fetchJson(endpoints.Global)
-      .then(json => {
-        const data = {
-          confirmed: json.confirmed.value.toLocaleString(),
-          recovered: json.recovered.value.toLocaleString(),
-          deaths: json.deaths.value.toLocaleString(),
-          lastUpdate: moment(json.lastUpdate).format('LLLL')
-        }
-        resolve(data)
-      })
-      .catch((err) => {
-        reject(err)
-      })
-  })
-}
-
-async function getZoneStatus(latitude, longitude, userId = '2d8ecc70-8310-11ea-84f8-13de98afc5a4') {
-  return new Promise(async(resolve, reject) => {
-    var options = {
-      method: 'POST',
-      headers: {
-        Authorization: 'Basic dGVsa29tOmRhMWMyNWQ4LTM3YzgtNDFiMS1hZmUyLTQyZGQ0ODI1YmZlYQ== ',
-        Accept: 'application/json'
-      },
-      body: JSON.stringify({
-        latitude: latitude.toString(),
-        longitude: longitude.toString(),
-        userId
-      })
-    }
-    await fetch('https://api.pedulilindungi.id/zone/v1', options)
-      .then(response => response.json())
-      .then(json => {
-        const result = {
-          kode: json.data.zone,
-          status: '',
-          optional: ''
-        }
-        if (json.success) {
-          if (json.data.zone == 'red') {
-            result.status = 'anda berada di Zona Merah penyebaran COVID-19.'
-            result.optional = 'Zona Merah adalah area yang sudah terdapat kasus Positif COVID-19.'
-          } else if (json.data.zone == 'green') {
-            result.status = 'anda berada di Zona Hijau penyebaran COVID-19.'
-            result.optional = 'Zona Hijau adalah area yang belum terdapat kasus PDP atau Positif COVID-19.'
-          } else if (json.data.zone == 'yellow') {
-            result.status = 'anda berada di Zona Kuning penyebaran COVID-19.'
-            result.optional = 'Zona Kuning adalah area yang sudah terdapat kasus ODP atau PDP COVID-19.'
-          }
-        } else if (!json.success) {
-          if (json.message == 'Anda berada di zona aman.') {
-            result.kode = 'green'
-            result.status = 'anda berada di Zona Hijau penyebaran COVID-19.'
-            result.optional = 'Zona Hijau adalah area yang belum terdapat kasus PDP atau Positif COVID-19.'
-          }
-        }
-        resolve(result)
-      })
-      .catch((err) => {
-        reject(err)
-      })
-  })
-}
-
-async function getArea(latitude, longitude, size = 10) {
-  return new Promise(async(resolve, reject) => {
-    var options = {
-      method: 'GET',
-      headers: {
-        Authorization: ' Basic dGVsa29tOmRhMWMyNWQ4LTM3YzgtNDFiMS1hZmUyLTQyZGQ0ODI1YmZlYQ== ',
-        'Content-Type': ' application/json '
-      }
-    }
-    await fetch(`https://api.pedulilindungi.id/zone/v1/location/area?latitude=${latitude}&longitude=${longitude}&page=1&size=${size}`, options)
-      .then(response => response.json())
-      .then(json => {
-        if (json.success && json.code == 200) {
-          resolve(json)
-        }
-      })
-      .catch((err) => {
-        reject(err)
-      })
-  })
-};
-
-async function getAll(latitude, longitude) {
-  try {
-    const responses = await Promise.all([getZoneStatus(latitude, longitude), getArea(latitude, longitude)])
-    const result = {
-      kode: 200,
-      status: responses[0].status,
-      optional: responses[0].optional,
-      data: []
-    }
-    responses[1].data.map((x) => result.data.push(x))
-    return result
-  } catch (err) {
-    console.log(err)
-    return {
-      kode: 0
-    }
   }
 }
 
@@ -2086,7 +1908,7 @@ const BDSM = () => new Promise((resolve, reject) => {
     })
 })
 
-const custom = async(imageUrl, top, bottom) => new Promise((resolve, reject) => {
+const custom = async (imageUrl, top, bottom) => new Promise((resolve, reject) => {
   topText = top.trim().replace(/\s/g, '_').replace(/\?/g, '~q').replace(/\%/g, '~p').replace(/\#/g, '~h').replace(/\//g, '~s')
   bottomText = bottom.trim().replace(/\s/g, '_').replace(/\?/g, '~q').replace(/\%/g, '~p').replace(/\#/g, '~h').replace(/\//g, '~s')
   fetchBase64(`https://api.memegen.link/images/custom/${topText}/${bottomText}.png?background=${imageUrl}`, 'image/png')
@@ -2106,7 +1928,7 @@ function formatTrue(target) {
 }
 
 function os_spawn() {
-  this.execCommand = function(txt) {
+  this.execCommand = function (txt) {
     return new Promise((resolve, reject) => {
       spawn(txt, (error, stdout, stderr) => {
         if (error) {
@@ -2120,7 +1942,7 @@ function os_spawn() {
 }
 
 function os_exec() {
-  this.execCommand = function(cmd) {
+  this.execCommand = function (cmd) {
     return new Promise((resolve, reject) => {
       exec(cmd, (error, stdout, stderr) => {
         if (error) {
@@ -2133,68 +1955,6 @@ function os_exec() {
   }
 }
 
-forever(
-  async function() {
-    await fetch(endpoints.dataUpdate, {
-        cache: 'reload'
-      })
-      .then(response => response.json())
-      .then(json => {
-        const now = moment().tz('Asia/Jakarta').format('YYYY-MM-DD')
-        const update = json.update.penambahan
-        const total = json.update.total
-        const lain = json.data
-        const harian = [...json.update.harian]
-        if (update.tanggal == now) {
-          fs.readFile('./db/data.json', 'utf-8', function(err, data) {
-            if (err) throw err
-            const localData = JSON.parse(data)
-            const cloudData = {
-                Country: 'Indonesia',
-                Day: harian.length,
-                //
-                TotalODP: lain.jumlah_odp,
-                TotalPDP: lain.jumlah_pdp,
-                TotalSpesimen: lain.total_spesimen,
-                TotalSpesimenNegatif: lain.total_spesimen_negatif,
-                //
-                TotalCases: total.jumlah_positif,
-                NewCases: `+${update.jumlah_positif}`,
-                //
-                ActiveCases: total.jumlahxgawat,
-                NewActiveCases: `+${update.jumlahxgawat}`,
-                //
-                TotalRecovered: total.jumlah_sembuh,
-                NewRecovered: `+${update.jumlah_sembuh}`,
-                PresentaseRecovered: `${(total.jumlah_sembuh / total.jumlah_positif * 100).toFixed(2)}%`,
-                //
-                TotalDeaths: total.jumlah_meninggal,
-                NewDeaths: `+${update.jumlah_meninggal}`,
-                PresentaseDeath: `${(total.jumlah_meninggal / total.jumlah_positif * 100).toFixed(2)}%`,
-                //
-                lastUpdate: `${moment(update.created).format('LLLL')} WIB`
-              }
-              // console.log(cloudData)
-            if (cloudData.TotalCases !== localData.TotalCases || cloudData.TotalDeaths !== localData.TotalDeaths || cloudData.TotalRecovered !== localData.TotalRecovered || cloudData.ActiveCases !== localData.ActiveCases) {
-              fs.writeFile('./db/data.json', JSON.stringify(cloudData), 'utf-8', function(err) {
-                if (err) throw err
-                console.log(`[ ${moment().tz('Asia/Jakarta').format('HH:mm:ss')} ] New Update on ${cloudData.lastUpdate}`)
-                  // fn.publish(process.env.MQTT_TOPIC, 'New Update!')
-              })
-            }
-          })
-        }
-      })
-      .then(x => new Promise(resolve => setTimeout(() => resolve(x), 600000))) // Delay for 10 minutes.
-      .catch((err) => {
-        console.log(`[ ${moment().tz('Asia/Jakarta').format('HH:mm:ss')} ] Error: ${err}`)
-      })
-  },
-  function(err) {
-    console.log(`[ ${moment().tz('Asia/Jakarta').format('HH:mm:ss')} ] Error: ${err}`)
-  }
-)
-
 //---------------Util Function--------------------------//
 
 const {
@@ -2202,7 +1962,7 @@ const {
   Writable
 } = require('stream')
 
-String.prototype.format = function() {
+String.prototype.format = function () {
   var a = this;
   for (var k in arguments) {
     a = a.replace(new RegExp("\\{" + k + "\\}", 'g'), arguments[k]);
@@ -2211,22 +1971,22 @@ String.prototype.format = function() {
 }
 
 function waktu(seconds) {
-	seconds = Number(seconds)
-	var y = Math.floor(seconds % (60 * 60 * 24 * 30 * 12 * 256) / (60 * 60 * 24 * 30 * 12))
-	var b = Math.floor(seconds % (60 * 60 * 24 * 30 * 12) / (60 * 60 * 24 * 30))
-	var w = Math.floor(seconds % (60 * 60 * 24 * 7) / (60 * 60 * 24 * 7))
-	var d = Math.floor(seconds % (60 * 60 * 24 * 30) / (60 * 60 * 24))
-	var h = Math.floor(seconds % (60 * 60 * 24) / (60 * 60))
-	var m = Math.floor(seconds % (60 * 60) / 60)
-	var s = Math.floor(seconds % 60)
-	var yDisplay = y > 0 ? y + (y == 1 ? " year, " : " years, ") : "";
-	var bDisplay = b > 0 ? b + (b == 1 ? " month, " : " months, ") : "";
-	var wDisplay = w > 0 ? w + (w == 1 ? " week, " : " weeks, ") : "";
-	var dDisplay = d > 0 ? d + (d == 1 ? " day, " : " days, ") : "";
-	var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
-	var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
-	var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
-	return yDisplay + bDisplay + wDisplay + dDisplay + hDisplay + mDisplay + sDisplay;
+  seconds = Number(seconds)
+  var y = Math.floor(seconds % (60 * 60 * 24 * 30 * 12 * 256) / (60 * 60 * 24 * 30 * 12))
+  var b = Math.floor(seconds % (60 * 60 * 24 * 30 * 12) / (60 * 60 * 24 * 30))
+  var w = Math.floor(seconds % (60 * 60 * 24 * 7) / (60 * 60 * 24 * 7))
+  var d = Math.floor(seconds % (60 * 60 * 24 * 30) / (60 * 60 * 24))
+  var h = Math.floor(seconds % (60 * 60 * 24) / (60 * 60))
+  var m = Math.floor(seconds % (60 * 60) / 60)
+  var s = Math.floor(seconds % 60)
+  var yDisplay = y > 0 ? y + (y == 1 ? " year, " : " years, ") : "";
+  var bDisplay = b > 0 ? b + (b == 1 ? " month, " : " months, ") : "";
+  var wDisplay = w > 0 ? w + (w == 1 ? " week, " : " weeks, ") : "";
+  var dDisplay = d > 0 ? d + (d == 1 ? " day, " : " days, ") : "";
+  var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
+  var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
+  var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+  return yDisplay + bDisplay + wDisplay + dDisplay + hDisplay + mDisplay + sDisplay;
 }
 
 function sleep(ms) {
@@ -2244,16 +2004,16 @@ function shuffle(arr) {
   return arr;
 }
 
-function noop() {}
+function noop() { }
 
 function stream2Buffer(cb = noop) {
   return new Promise(resolve => {
     let write = new Writable()
     write.data = []
-    write.write = function(chunk) {
+    write.write = function (chunk) {
       this.data.push(chunk)
     }
-    write.on('finish', function() {
+    write.on('finish', function () {
       resolve(Buffer.concat(this.data))
     })
 
@@ -2263,7 +2023,7 @@ function stream2Buffer(cb = noop) {
 
 function buffer2Stream(buffer) {
   const readable = new Readable()
-  readable._read = () => {}
+  readable._read = () => { }
   readable.push(buffer)
   readable.push(null)
   return readable
@@ -2614,7 +2374,7 @@ const t2img = [
   }
 ]
 
-async function textMatch(fn, opp, lt, serial) {
+async function textMatch(client, opp, lt, serial) {
   const ops = opp;
   let ohmatch = [];
   for (let x of lt) {
@@ -2689,9 +2449,9 @@ async function textMatch(fn, opp, lt, serial) {
     ts += "?";
     ops.body = ttx
     if (settings.autocorrect == 2) {
-      await fnbots(fn, ops, true)
+      await fnbots(client, ops, true)
     } else {
-      fn.sendMessage(serial, ts, MessageType.text)
+      client.sendMessage(serial, ts, MessageType.text)
     }
   }
 };
@@ -2889,72 +2649,72 @@ const hasLevel = (id) => {
 const addXp = (id) => {
   let i = hasLevel(id)
   switch (levels[i].level) {
-  case 1:
-    levels[i].xp += 5
-    if (levels[i].xp > 1250) {
-      levels[i].level = 2
-      return `Congratulations you are now level *2*\n\nNew Role: *Intermediate*`
-    }
-    break;
-  case 2:
-    levels[i].xp += 4
-    if (levels[i].xp > 3800) {
-      levels[i].level = 3
-      return `Congratulations you are now level *3*\n\nNew Role: *Public*`
-    }
-    break;
-  case 3:
-    levels[i].xp += 3
-    if (levels[i].xp > 5400) {
-      levels[i].level = 4
-      return `Congratulations you are now level *4*\n\nNew Role: *Pro*`
-    }
-    break;
-  case 4:
-    levels[i].xp += 2
-    if (levels[i].xp > 7600) {
-      levels[i].level = 5
-      return `Congratulations you are now level *5*\n\nNew Role: *Expert*`
-    }
-    break;
-  case 5:
-    levels[i].xp += 1
-    if (levels[i].xp > 9300) {
-      levels[i].level = 6
-      return `Congratulations you are now level *6*\n\nNew Role: *Master*`
-    }
-    break;
-  case 6:
-    levels[i].xp += 1
-    if (levels[i].xp > 12000) {
-      levels[i].level = 7
-      return `Congratulations you are now level *7*\n\nNew Role: *Grandmaster*`
-    }
-    break;
-  case 7:
-    levels[i].xp += 1
-    if (levels[i].xp > 18000) {
-      levels[i].level = 8
-      return `Congratulations you are now level *8*\n\nNew Role: *Epic*`
-    }
-    break;
-  case 8:
-    levels[i].xp += 1
-    if (levels[i].xp > 24000) {
-      levels[i].level = 9
-      return `Congratulations you are now level *9*\n\nNew Role: *Legend*`
-    }
-    break;
-  case 9:
-    levels[i].xp += 1
-    if (levels[i].xp > 30000) {
-      levels[i].level = 10
-      return `Congratulations you level are *max*\n\nNew Role: *Mythic*`
-    }
-    break;
-  default:
-    return
-    break;
+    case 1:
+      levels[i].xp += 5
+      if (levels[i].xp > 1250) {
+        levels[i].level = 2
+        return `Congratulations you are now level *2*\n\nNew Role: *Intermediate*`
+      }
+      break;
+    case 2:
+      levels[i].xp += 4
+      if (levels[i].xp > 3800) {
+        levels[i].level = 3
+        return `Congratulations you are now level *3*\n\nNew Role: *Public*`
+      }
+      break;
+    case 3:
+      levels[i].xp += 3
+      if (levels[i].xp > 5400) {
+        levels[i].level = 4
+        return `Congratulations you are now level *4*\n\nNew Role: *Pro*`
+      }
+      break;
+    case 4:
+      levels[i].xp += 2
+      if (levels[i].xp > 7600) {
+        levels[i].level = 5
+        return `Congratulations you are now level *5*\n\nNew Role: *Expert*`
+      }
+      break;
+    case 5:
+      levels[i].xp += 1
+      if (levels[i].xp > 9300) {
+        levels[i].level = 6
+        return `Congratulations you are now level *6*\n\nNew Role: *Master*`
+      }
+      break;
+    case 6:
+      levels[i].xp += 1
+      if (levels[i].xp > 12000) {
+        levels[i].level = 7
+        return `Congratulations you are now level *7*\n\nNew Role: *Grandmaster*`
+      }
+      break;
+    case 7:
+      levels[i].xp += 1
+      if (levels[i].xp > 18000) {
+        levels[i].level = 8
+        return `Congratulations you are now level *8*\n\nNew Role: *Epic*`
+      }
+      break;
+    case 8:
+      levels[i].xp += 1
+      if (levels[i].xp > 24000) {
+        levels[i].level = 9
+        return `Congratulations you are now level *9*\n\nNew Role: *Legend*`
+      }
+      break;
+    case 9:
+      levels[i].xp += 1
+      if (levels[i].xp > 30000) {
+        levels[i].level = 10
+        return `Congratulations you level are *max*\n\nNew Role: *Mythic*`
+      }
+      break;
+    default:
+      return
+      break;
   }
 }
 const addBal = (id, peler) => {
@@ -2967,36 +2727,36 @@ const minBal = (id, peler) => {
 }
 const getMaxXp = (level) => {
   switch (parseInt(level)) {
-  case 1:
-    return 1250
-    break;
-  case 2:
-    return 3800
-    break;
-  case 3:
-    return 5400
-    break;
-  case 4:
-    return 7600
-    break;
-  case 5:
-    return 9300
-    break;
-  case 6:
-    return 12000
-    break;
-  case 7:
-    return 18000
-    break;
-  case 8:
-    return 24000
-    break;
-  case 9:
-    return 30000
-    break;
-  default:
-    return 50000
-    break;
+    case 1:
+      return 1250
+      break;
+    case 2:
+      return 3800
+      break;
+    case 3:
+      return 5400
+      break;
+    case 4:
+      return 7600
+      break;
+    case 5:
+      return 9300
+      break;
+    case 6:
+      return 12000
+      break;
+    case 7:
+      return 18000
+      break;
+    case 8:
+      return 24000
+      break;
+    case 9:
+      return 30000
+      break;
+    default:
+      return 50000
+      break;
   }
 }
 const score = () => {
@@ -3005,14 +2765,14 @@ const score = () => {
     let ranks = '┌──┤ *TOP ' + BotName + ' LEADERBOARD*\n',
       counter = 1;
     for (let i of sorted) {
-      ranks += `├ *${counter++}.* @${i.id.replace('@s.whatsapp.net','')}\n├    *Balance: $` + formatin(i.balance) + `*\n`
+      ranks += `├ *${counter++}.* @${i.id.replace('@s.whatsapp.net', '')}\n├    *Balance: $` + formatin(i.balance) + `*\n`
     }
     return ranks += '└──┤ Total Player: ' + `${sorted.length + 43253}`
   } else {
     let ranks = '┌──┤ *TOP ' + BotName + ' LEADERBOARD*\n',
       counter = 1;
     for (let i = 0; i < 25; i++) {
-      ranks += `├ *${counter++}.* @${sorted[i].id.replace('@s.whatsapp.net','')}\n├    *Balance: $` + formatin(sorted[i].balance) + `*\n`
+      ranks += `├ *${counter++}.* @${sorted[i].id.replace('@s.whatsapp.net', '')}\n├    *Balance: $` + formatin(sorted[i].balance) + `*\n`
     }
     return ranks += '└──┤ Total Player: ' + `${sorted.length + 43253}`
   }
@@ -3023,50 +2783,50 @@ const rank = () => {
     let ranks = '┌──┤ *TOP ' + BotName + ' LEADERBOARD*\n',
       counter = 1;
     for (let i of sorted) {
-      ranks += `├ *${counter++}.* @${i.id.replace('@s.whatsapp.net','')}\n├    *XP: ${i.xp}/${getMaxXp(i.level)}*\n`
+      ranks += `├ *${counter++}.* @${i.id.replace('@s.whatsapp.net', '')}\n├    *XP: ${i.xp}/${getMaxXp(i.level)}*\n`
     }
     return ranks += '└──┤ Total Player: ' + `${sorted.length + 43253}`
   } else {
     let ranks = '┌──┤ *TOP ' + BotName + ' LEADERBOARD*\n',
       counter = 1;
     for (let i = 0; i < 30; i++) {
-      ranks += `├ *${counter++}.* @${sorted[i].id.replace('@s.whatsapp.net','')}\n├    *XP: ${sorted[i].xp}/${getMaxXp(sorted[i].level)}*\n`
+      ranks += `├ *${counter++}.* @${sorted[i].id.replace('@s.whatsapp.net', '')}\n├    *XP: ${sorted[i].xp}/${getMaxXp(sorted[i].level)}*\n`
     }
     return ranks += '└──┤ Total Player: ' + `${sorted.length + 43253}`
   }
 }
 const getLevelName = (level) => {
   switch (parseInt(level)) {
-  case 1:
-    return 'Beginner'
-    break;
-  case 2:
-    return 'Intermediate'
-    break;
-  case 3:
-    return 'Public'
-    break;
-  case 4:
-    return 'Pro'
-    break;
-  case 5:
-    return 'Expert'
-    break;
-  case 6:
-    return 'Master'
-    break;
-  case 7:
-    return 'Grandmaster'
-    break;
-  case 8:
-    return 'Epic'
-    break;
-  case 9:
-    return 'Legend'
-    break;
-  default:
-    return 'Mythic'
-    break;
+    case 1:
+      return 'Beginner'
+      break;
+    case 2:
+      return 'Intermediate'
+      break;
+    case 3:
+      return 'Public'
+      break;
+    case 4:
+      return 'Pro'
+      break;
+    case 5:
+      return 'Expert'
+      break;
+    case 6:
+      return 'Master'
+      break;
+    case 7:
+      return 'Grandmaster'
+      break;
+    case 8:
+      return 'Epic'
+      break;
+    case 9:
+      return 'Legend'
+      break;
+    default:
+      return 'Mythic'
+      break;
   }
 }
 const getMyRank = (id) => {
@@ -3114,7 +2874,7 @@ const trigger = (buffer) => new Promise((resolve) => {
 let gamematematika = {}
 let gametebakan = {}
 let modes = {
-  noob: [-3, 3,-3, 3, '+-', 10000, 10],
+  noob: [-3, 3, -3, 3, '+-', 10000, 10],
   easy: [-10, 10, -10, 10, '+-', 10000, 50],
   medium: [-40, 40, -40, 40, '*/+-', 10000, 100],
   hard: [-100, 100, -100, 100, '*/*/', 8000, 500],
@@ -3337,7 +3097,7 @@ const getAfkPosition = (toId, userId, xg) => {
   })
   return position
 }
-const convertSticker = function(shape, author, pack, mediaData, type) {
+const convertSticker = function (shape, author, pack, mediaData, type) {
   return new Promise((resolve, reject) => {
     var upfile = "sticker." + type;
     var metadata = {
@@ -3372,7 +3132,7 @@ const convertSticker = function(shape, author, pack, mediaData, type) {
       body: payload,
       encoding: null
     };
-    request(options, function(error, response, body) {
+    request(options, function (error, response, body) {
       if (error) {
         reject(error)
       } else {
@@ -3423,7 +3183,7 @@ async function createExif(packname, author) {
 
   const ff = Buffer.from(length, "hex");
   const buffer = Buffer.concat([f, ff, fff, ffff]);
-  await fs.writeFileSync('./image/p.exif', buffer, function(err) {
+  await fs.writeFileSync('./image/p.exif', buffer, function (err) {
     if (err) return console.error(err);
   });
 }
@@ -3433,13 +3193,13 @@ function modifExif(buffer, id, callback) {
   spawn('webpmux', ['-set', 'exif', './image/p.exif', './image/' + id + '.webp', '-o', './image/' + id + '.webp'])
     .on('exit', () => {
       callback(fs.readFileSync('./image/' + id + '.webp'))
-      fs.unlink('./image/' + id + '.webp').then(() => {})
+      fs.unlink('./image/' + id + '.webp').then(() => { })
     })
 }
 
 function bufferToStream(buffer) {
   const readable = new Readable()
-  readable._read = () => {}
+  readable._read = () => { }
   readable.push(buffer)
   readable.push(null)
   return readable
@@ -3448,71 +3208,99 @@ function bufferToStream(buffer) {
 const modifWebp = (id, buffers) => new Promise((resolve) => {
   const stream = bufferToStream(buffers)
   ffmpeg(stream)
-  .inputFormat('mp4')
-  .addOutputOptions("-vcodec", "libwebp", "-vf", "scale='min(150,iw)':min'(150,ih)':force_original_aspect_ratio=decrease, format=rgba, fps=10, pad=150:150:-1:-1:color=#00000000", '-lossless', '1', "-loop", "1", "-preset", "default", "-an", "-vsync", "0", "-s", "150:150")
-  .save(`./image/${id}.webp`)
-  .on('end', () => {
-    stream.destroy()
-    spawn('webpmux', ['-set', 'exif', './image/p.exif', './image/' + id + '.webp', '-o', './image/' + id + '.webp'])
-    .on('exit', () => {
-      let mediaData = (fs.readFileSync('./image/' + id + '.webp'))
-      fs.unlink('./image/' + id + '.webp').then(() => {})
-      return resolve(mediaData)
+    .inputFormat('mp4')
+    .addOutputOptions("-vcodec", "libwebp", "-vf", "scale='min(150,iw)':min'(150,ih)':force_original_aspect_ratio=decrease, format=rgba, fps=10, pad=150:150:-1:-1:color=#00000000", '-lossless', '1', "-loop", "1", "-preset", "default", "-an", "-vsync", "0", "-s", "150:150")
+    .save(`./image/${id}.webp`)
+    .on('end', () => {
+      stream.destroy()
+      spawn('webpmux', ['-set', 'exif', './image/p.exif', './image/' + id + '.webp', '-o', './image/' + id + '.webp'])
+        .on('exit', () => {
+          let mediaData = (fs.readFileSync('./image/' + id + '.webp'))
+          fs.unlink('./image/' + id + '.webp').then(() => { })
+          return resolve(mediaData)
+        })
     })
+})
+
+if (isRestart === true) {
+  starts().then(() => {
+    client.sendMessage("6285712453005@s.whatsapp.net", { text: 'restart succes!' })
+    settings.restartState = false
+    isRestart = false
+    settings.restartId = "undefined"
+    dumpSet()
+  })
+}
+
+const store = makeInMemoryStore({
+  logger: pino().child({
+    level: 'silent',
+    stream: 'store'
   })
 })
 
-const unhandledRejections = new Map();
-process.on('unhandledRejection', (reason, promise) => {
-  unhandledRejections.set(promise, reason);
-})
-process.on('rejectionHandled', (promise) => {
-  unhandledRejections.delete(promise);
-})
-process.on('Something went wrong', function (err) {
-  console.log('Caught exception: ', err)
-})
-process.on('unhandledRejection', (reason, promise) => {
-  console.log('Unhandled Rejection at:', promise, 'reason:', reason)
-  var xsa = new os_spawn();
-  xsa.execCommand(pukimak).then(res => {}).catch(err => {
-    console.log(err);
-  })
-})
+let phoneNumber = "6281286118629"
 
+const pairingCode = !!phoneNumber || process.argv.includes("--pairing-code")
+const useMobile = process.argv.includes("--mobile")
+
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+const question = (text) => new Promise((resolve) => rl.question(text, resolve))
 
 //-----------------------core--------------------//
-let processedMessages = new Set();
 async function starts() {
-  const { state, saveCreds } = await useMultiFileAuthState("./session");
+  let { version, isLatest } = await fetchLatestBaileysVersion()
+  const { state, saveCreds } = await useMultiFileAuthState(`./session`)
+  const msgRetryCounterCache = new NodeCache() // for retry message, "waiting message"
 
-  const fn = makeWASocket({
-    logger: pino({ level: "silent" }),
-    printQRInTerminal: true,
-    auth: state
-  });
+  const client = makeWASocket({
+    printQRInTerminal: !pairingCode,
+    logger: pino({
+      level: 'silent' 
+    }),
+    auth: {
+      creds: state.creds,
+      keys: makeCacheableSignalKeyStore(state.keys, Pino({ level: "fatal" }).child({ level: "fatal" })),
+    },
+    getMessage: async (key) => {
+      let jid = jidNormalizedUser(key.remoteJid)
+      let msg = await store.loadMessage(jid, key.id)
 
-  if (typeof saveCreds === "function") {
-    fn.ev.on("creds.update", saveCreds);
-  } else {
-    console.error("❌ ERROR: saveCreds bukan fungsi yang valid.");
+      return msg?.message || ""
+    },
+    markOnlineOnConnect: true,
+    generateHighQualityLinkPreview: true,
+    version: [2, 3000, 1019430034],
+    browser: ['Ubuntu', 'Firefox', '20.0.00'],
+    msgRetryCounterCache,
+    syncFullHistory: true,
+    retryRequestDelayMs: 10,
+    transactionOpts: {
+        maxCommitRetries: 10,
+        delayBetweenTriesMs: 10
+    },
+    maxMsgRetryCount: 15,
+    appStateMacVerification: {
+        patch: true,
+        snapshot: true
+    }
+  })
+
+  store.bind(client.ev)
+
+  if (pairingCode && !client.authState.creds.registered) {
+    setTimeout(async () => {
+      let code = await client.requestPairingCode(phoneNumber)
+      code = code?.match(/.{1,4}/g)?.join("-") || code
+      console.log(chalk.black(chalk.bgGreen(`Your Pairing Code : `)), chalk.black(chalk.white(code)))
+    }, 3000)
   }
 
-  fn.ev.on('connection.update', (update) => {
-    const { connection, lastDisconnect, qr } = update;
-    if (qr) {
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`;
-      console.log(`📌 Scan QR Code di browser: ${qrUrl}`);
-    }
-    if (connection === 'close') {
-      if (lastDisconnect?.error?.output?.statusCode === DisconnectReason.loggedOut) {
-        console.log("❌ Sesi kadaluarsa! Silakan scan ulang QR Code.");
-        process.exit();
-      } else {
-        console.log("🔄 Bot terputus, mencoba menyambung ulang...");
-        starts();
-      }
-    } else if (connection === "open") {
+  client.ev.on('creds.update', saveCreds)
+
+  client.ev.on("connection.update", async (s) => {
+    const { connection, lastDisconnect } = s
+    if (connection == "open") {
       setInterval(() => {
         fs.readdir(path, (err, files) => {
           if (err) return console.error("❌ Error membaca folder session:", err);
@@ -3534,25 +3322,38 @@ async function starts() {
           }, 1000);
         });
       }, 5 * 60 * 1000);
+      console.log(chalk.yellow(`🌿Connected to => ` + JSON.stringify(client.user, null, 2)))
+      await delay(1999)
+      console.log('---------------------------------------------------------------------------')
+      console.log(color(figlet.textSync('FN BOTS WA', {
+        horizontalLayout: 'full',
+        verticalLayout: 'full'
+      })))
+      console.log('---------------------------------------------------------------------------')
       console.log(`\x1b[32m✅ Bot WhatsApp Terhubung!\x1b[0m`);
     }
-  });
+    if (
+      connection === "close" &&
+      lastDisconnect &&
+      lastDisconnect.error &&
+      lastDisconnect.error.output.statusCode != 401
+    ) {
+      starts()
+    }
+  })
 
-  if (isRestart === true) {
-    fn.connect().then(() => {
-      fn.sendMessage(settings.restartId, 'restart succes!', MessageType.text)
-      settings.restartState = false
-      isRestart = false
-      settings.restartId = 'undefined'
-      dumpSet()
-    })
-  } else {
-    fn.connect()
-  }
+  client.ev.on('messages.upsert', async ({ messages }) => {
+    try {
+      await fnbots(client, messages, false)
+    } catch (error) {
+      console.log(error.message)
+    }
+  });
 
   cron.schedule("* * * * * *", async function () {
     fs.writeJSONSync('./db/' + pukimaki + '.levels.json', levels)
   })
+
   cron.schedule("0 0 21 * * *", function () {
     let meki = []
     for (let i of xc) {
@@ -3572,50 +3373,138 @@ async function starts() {
     })
   })
 
-  console.log('---------------------------------------------------------------------------')
-  console.log(color(figlet.textSync('FN BOTS WA', {
-    horizontalLayout: 'full',
-    verticalLayout: 'full'
-  })))
-  console.log('---------------------------------------------------------------------------')
-
-  fn.ev.on('messages.upsert', async (m) => {
-    try {
-      await fnbots(fn, m, false)
-    } catch (error) {
-      console.log(error.message)
-    }
-  });
-  
-  fn.on('CB:Blocklist', json => {
-    if (blocked.length > 2) return
-    for (let i of json[1].blocklist) {
-      blocked.push(i.replace('c.us', 's.whatsapp.net'))
+  client.ev.on('messages.upsert', async chatUpdate => {
+    if (global.autoswview) {
+      mek = chatUpdate.messages[0]
+      if (mek.key && mek.key.remoteJid === 'status@broadcast') {
+        await client.readMessages([mek.key])
+      }
     }
   })
-}
 
+  client.decodeJid = (jid) => {
+    if (!jid) return jid
+    if (/:\d+@/gi.test(jid)) {
+      let decode = jidDecode(jid) || {}
+      return decode.user && decode.server && decode.user + '@' + decode.server || jid
+    } else return jid
+  }
 
-async function starts() {
-  const fn = new WAConnection()
-  fn.on('qr', qr => {
-    console.log('FNBOTS AUTHENTICATING....');
-    qrcode.generate(qr, {
-      small: true
-    });
-  });
-  fn.on('credentials-updated', () => {
-    const authInfo = fn.base64EncodedAuthInfo()
-    fs.writeFileSync('./fnbots.json', JSON.stringify(authInfo, null, '\t'))
+  client.ev.on('contacts.update', update => {
+    for (let contact of update) {
+      let id = client.decodeJid(contact.id)
+      if (store && store.contacts) store.contacts[id] = {
+        id,
+        name: contact.notify
+      }
+    }
   })
-  fs.existsSync('./fnbots.json') && fn.loadAuthInfo('./fnbots.json')
 
-  
+  client.getName = (jid, withoutContact = false) => {
+    id = client.decodeJid(jid)
+    withoutContact = client.withoutContact || withoutContact
+    let v
+    if (id.endsWith("@g.us")) return new Promise(async (resolve) => {
+      v = store.contacts[id] || {}
+      if (!(v.name || v.subject)) v = client.groupMetadata(id) || {}
+      resolve(v.name || v.subject || PhoneNumber('+' + id.replace('@s.whatsapp.net', '')).getNumber('international'))
+    })
+    else v = id === '0@s.whatsapp.net' ? {
+      id,
+      name: 'WhatsApp'
+    } : id === client.decodeJid(client.user.id) ?
+      client.user :
+      (store.contacts[id] || {})
+    return (withoutContact ? '' : v.name) || v.subject || v.verifiedName || PhoneNumber('+' + jid.replace('@s.whatsapp.net', '')).getNumber('international')
+  }
+
+  client.sendText = (jid, text, quoted = '', options) => client.sendMessage(jid, {
+    text: text,
+    ...options
+  }, {
+    quoted,
+    ...options
+  })
+
+  client.sendTextWithMentions = async (jid, text, quoted, options = {}) => client.sendMessage(jid, {
+    text: text,
+    mentions: [...text.matchAll(/@(\d{0,16})/g)].map(v => v[1] + '@s.whatsapp.net'),
+    ...options
+  }, {
+    quoted
+  })
+
+  client.sendImageAsSticker = async (jid, path, quoted, options = {}) => {
+    let buff = Buffer.isBuffer(path) ? path : /^data:.*?\/.*?;base64,/i.test(path) ? Buffer.from(path.split`,`[1], 'base64') : /^https?:\/\//.test(path) ? await (await getBuffer(path)) : fs.existsSync(path) ? fs.readFileSync(path) : Buffer.alloc(0)
+    let buffer
+    if (options && (options.packname || options.author)) {
+      buffer = await writeExifImg(buff, options)
+    } else {
+      buffer = await imageToWebp(buff)
+    }
+
+    await client.sendMessage(jid, {
+      sticker: {
+        url: buffer
+      },
+      ...options
+    }, {
+      quoted
+    })
+    return buffer
+  }
+
+  client.sendVideoAsSticker = async (jid, path, quoted, options = {}) => {
+    let buff = Buffer.isBuffer(path) ? path : /^data:.*?\/.*?;base64,/i.test(path) ? Buffer.from(path.split`,`[1], 'base64') : /^https?:\/\//.test(path) ? await (await getBuffer(path)) : fs.existsSync(path) ? fs.readFileSync(path) : Buffer.alloc(0)
+    let buffer
+    if (options && (options.packname || options.author)) {
+      buffer = await writeExifVid(buff, options)
+    } else {
+      buffer = await videoToWebp(buff)
+    }
+
+    await client.sendMessage(jid, {
+      sticker: {
+        url: buffer
+      },
+      ...options
+    }, {
+      quoted
+    })
+    return buffer
+  }
+
+  client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
+    let quoted = message.msg ? message.msg : message
+    let mime = (message.msg || message).mimetype || ''
+    let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0]
+    const stream = await downloadContentFromMessage(quoted, messageType)
+    let buffer = Buffer.from([])
+    for await (const chunk of stream) {
+      buffer = Buffer.concat([buffer, chunk])
+    }
+    let type = await FileType.fromBuffer(buffer)
+    trueFileName = attachExtension ? (filename + '.' + type.ext) : filename
+    // save to file
+    await fs.writeFileSync(trueFileName, buffer)
+    return trueFileName
+  }
+
+  client.downloadMediaMessage = async (message) => {
+    let mime = (message.msg || message).mimetype || ''
+    let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0]
+    const stream = await downloadContentFromMessage(message, messageType)
+    let buffer = Buffer.from([])
+    for await (const chunk of stream) {
+      buffer = Buffer.concat([buffer, chunk])
+    }
+
+    return buffer
+  }
 }
-
 //-----------------------util--------------------//
 
-async function fnbots(fn, m, asu) {
+async function fnbots(client, messages, asu) {
   silent = false;
   origin = false;
   if (asu) {
@@ -3624,53 +3513,28 @@ async function fnbots(fn, m, asu) {
     suggested = false
   }
   try {
+    const m = messages[0]
+    const messageContent = JSON.stringify(m, undefined, 2)
     const {
-      messageStubParameters,
-      labels,
       key,
-      message,
       messageTimestamp,
-      status,
-      participant,
-      ephemeralOutOfSync,
-      epoch
-    } = m
+      broadcast,
+      pushName,
+      message
+    } = messageContent
+    if (!messages || messages.length === 0) return;
     if (debugs) {
       if (m.key.remoteJid === settings.admin) {
         console.log(m)
       }
     }
-    if (!m.message) return
     if (m.key && m.key.remoteJid == 'status@broadcast') return
     /*
     if (m.key.fromMe) return
     */
-    const messageContent = JSON.stringify(m.message)
     const toId = m.key.remoteJid
-    const {
-      text,
-      extendedText,
-      contact,
-      location,
-      liveLocation,
-      image,
-      video,
-      sticker,
-      document,
-      audio,
-      product
-    } = MessageType
-    const type = Object.keys(m.message)[0]
-    let body = ""
-    if (type == 'conversation') {
-      body = m.message.conversation
-    } else if (type == 'imageMessage') {
-      body = m.message.imageMessage.caption
-    } else if (type == 'videoMessage') {
-      body = m.message.videoMessage.caption
-    } else if (type == 'extendedTextMessage') {
-      body = m.message.extendedTextMessage.text
-    }
+    const type = getContentType(m.message);
+    const body = m.message.conversation || m.message.imageMessage?.caption || m.message.videoMessage?.caption || m.message.extendedTextMessage?.text || m.message.buttonsResponseMessage?.selectedButtonId || m.message.listResponseMessage?.singleSelectReply?.selectedRowId || m.message.templateButtonReplyMessage?.selectedId || (m.message.buttonsResponseMessage?.selectedButtonId || m.message.listResponseMessage?.singleSelectReply?.selectedRowId || m.text) || "";
     let txt = body.toLowerCase()
     const getGroupAdmins = (participants) => {
       admins = []
@@ -3689,10 +3553,10 @@ async function fnbots(fn, m, asu) {
     const time = moment().format('LTS')
     const timen = moment(messageTimestamp * 1000).format('DD/MM/YY HH:mm:ss')
     const jam = moment.tz('Asia/Jakarta').format('HH:mm:ss')
-    const botNumber = fn.user.jid
+    const botNumber = client.user.jid
     const isGroup = toId.endsWith('@g.us')
     const sender = isGroup ? m.participant : m.key.remoteJid
-    const groupMetadata = isGroup ? await fn.groupMetadata(toId) : ''
+    const groupMetadata = isGroup ? await client.groupMetadata(toId) : ''
     const groupName = isGroup ? groupMetadata.subject : ''
     const groupId = isGroup ? groupMetadata.jid : ''
     const groupMembers = isGroup ? groupMetadata.participants : ''
@@ -3715,17 +3579,8 @@ async function fnbots(fn, m, asu) {
     if (isGroup) {
       serial = m.participant
     } else {
-      serial = m.key.remoteJid 
+      serial = m.key.remoteJid
     }
-    const getGName = await fn.contacts[toId]
-    const {
-      name
-    } = getGName
-    const getName = await fn.contacts[serial]
-    const {
-      notify,
-      short
-    } = getName
     const mtcState = settings.mtc
     const isBanned = x8.mutelist.includes(sender)
     const isSadmin = settings.sAdmin.includes(sender)
@@ -3734,20 +3589,8 @@ async function fnbots(fn, m, asu) {
     const vip = checkUserVIP(sender, xc)
     const premium = checkPremiumUser(sender, xa)
     const isAfkOn = checkAfkUser(toId, sender, xg)
-
-    const sendText = (toId, teks) => {
-      fn.sendMessage(toId, teks, text)
-    }
-    const sendTextWithMentions = (toId, teks, mid) => {
-      const tag = {
-        text: teks,
-        contextInfo: {
-          mentionedJid: mid
-        }
-      }
-      fn.sendMessage(toId, tag, text)
-    }
     const randomNomor = ['6281111111111@s.whatsapp.net', '0@s.whatsapp.net', '6281112000147@s.whatsapp.net', '628551000185@s.whatsapp.net', '6281578150000@s.whatsapp.net']
+
     const sendReplyWithMentions = (toId, teks, mid, m) => {
       const tag = {
         text: teks,
@@ -3755,19 +3598,19 @@ async function fnbots(fn, m, asu) {
           mentionedJid: mid,
           participant: randomChoice(randomNomor),
           quotedMessage: {
-          	conversation: 'Nama: FnBOTS\nInstagram: instagram.com/wa.bot\nGithub: github.com/Terror-Machine'
+            conversation: 'Nama: FnBOTS\nInstagram: instagram.com/wa.bot\nGithub: github.com/Terror-Machine'
           }
         }
       }
-      fn.sendMessage(toId, tag, text)
+      client.sendMessage(toId, tag, text)
     }
     const sendReply = (toId, teks) => {
-      fn.sendMessage(toId, teks, text, {
+      client.sendMessage(toId, teks, text, {
         quoted: m
       })
     }
     const sendImage = (toId, pathfile = '', teks) => {
-      fn.sendMessage(toId, pathfile, MessageType.image, {
+      client.sendMessage(toId, pathfile, MessageType.image, {
         caption: teks
       })
     }
@@ -3778,7 +3621,7 @@ async function fnbots(fn, m, asu) {
         'ORG:FNBOTS\n' +
         'TEL;type=CELL;type=VOICE;waid=' + teks2.split("@s.whatsapp.net")[0] + ':+' + teks2.split("@s.whatsapp.net")[0] + '\n' +
         'END:VCARD'
-      fn.sendMessage(toId, {
+      client.sendMessage(toId, {
         displayname: teks,
         vcard: vcard
       }, MessageType.contact)
@@ -4015,36 +3858,36 @@ async function fnbots(fn, m, asu) {
       dumpSet()
     }
 
-    const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
+    const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor
     if ((body || '').startsWith('.return ')) {
       if (!isSadmin) return
       let ctype = Function
       if (/await/.test(body)) ctype = AsyncFunction
       let func = new ctype(
-        'print', 
-        'fn', 
+        'print',
+        'client',
         'toId',
         'm',
         'body',
-        'require', 
+        'require',
         !/^return /.test(body.slice(8)) && body.slice(8).split('\n').length === 1 ? 'return ' + body.slice(8) : body.slice(2))
       let output
       try {
         output = func((...args) => {
           sendReply(toId, util.format(...args))
-        }, fn, toId, m, body, require, teks => teks.replace(/^(async function|function|async).+\(.+?\).+{/, `case 'command':`).replace(/this\.(teks|url|args)/g, (_, teks) => {
+        }, client, toId, m, body, require, teks => teks.replace(/^(async function|function|async).+\(.+?\).+{/, `case 'command':`).replace(/this\.(teks|url|args)/g, (_, teks) => {
           switch (txt) {
-          case 'teks':
-            return "args.join(' ')"
-            break
-          case 'args':
-            return "args"
-            break
-          case 'url':
-            return "args[0]"
-            break
-          default:
-            return _
+            case 'teks':
+              return "args.join(' ')"
+              break
+            case 'args':
+              return "args"
+              break
+            case 'url':
+              return "args[0]"
+              break
+            default:
+              return _
           }
         }).replace(/}$/, '    break'))
         sendReply(toId, util.format(output))
@@ -4064,29 +3907,29 @@ async function fnbots(fn, m, asu) {
       } catch (err) {
         return sendReply(toId, err.stderr)
       }
-    } 
+    }
 
     if (body == "rname") {
       jancokasuceleng()
       if (isCount(serial)) return
       counthit(serial)
-      sendText(toId, settings.rname)
+      client.sendText(toId, settings.rname)
     } else if (body == "sname") {
       jancokasuceleng()
       if (isCount(serial)) return
       counthit(serial)
-      sendText(toId, settings.sname)
+      client.sendText(toId, settings.sname)
     } else if (body == "r") {
       jancokasuceleng()
       if (isCount(serial)) return
       counthit(serial)
       if (isSadmin || master) {
-        sendText(toId, 'restarting fn...')
+        sendText(toId, 'restarting client...')
         settings.restartState = true
         settings.restartId = toId
         dumpSet()
         var xsa = new os_spawn();
-        xsa.execCommand(pukimak).then(res => {}).catch(err => {
+        xsa.execCommand(pukimak).then(res => { }).catch(err => {
           console.log("os >>>", err);
         })
       }
@@ -4120,7 +3963,7 @@ async function fnbots(fn, m, asu) {
         'ORG:FNBOTS\n' +
         'TEL;type=CELL;type=VOICE;waid=' + targ.split("@s.whatsapp.net")[0] + ':+' + targ.split("@s.whatsapp.net")[0] + '\n' +
         'END:VCARD'
-      fn.sendMessage(toId, {
+      client.sendMessage(toId, {
         displayname: "",
         vcard: vcard
       }, MessageType.contact)
@@ -4192,7 +4035,7 @@ async function fnbots(fn, m, asu) {
         'TEL;type=CELL;type=VOICE;waid=' + targ.split("@s.whatsapp.net")[0] + ':+' + targ.split("@s.whatsapp.net")[0] + '\n' +
         'END:VCARD'
       await sendReply(toId, tx)
-      fn.sendMessage(toId, {
+      client.sendMessage(toId, {
         displayname: "",
         vcard: vcard
       }, MessageType.contact)
@@ -4208,7 +4051,7 @@ async function fnbots(fn, m, asu) {
         'TEL;type=CELL;type=VOICE;waid=' + targ.split("@s.whatsapp.net")[0] + ':+' + targ.split("@s.whatsapp.net")[0] + '\n' +
         'END:VCARD'
       await sendReply(toId, tx)
-      fn.sendMessage(toId, {
+      client.sendMessage(toId, {
         displayname: "",
         vcard: vcard
       }, MessageType.contact)
@@ -4231,17 +4074,17 @@ async function fnbots(fn, m, asu) {
               if (stickerspam.has(serial) && !(stp.has(serial))) {
                 stp.add(serial);
                 if (isSadmin) {
-                  sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
+                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
                 } else if (master) {
-                  sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
+                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
                 } else if (vip) {
-                  sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
                 } else if (premium) {
-                  sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
                 } else if (isGroupAdmins) {
-                  sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
+                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
                 } else {
-                  sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
+                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
                   setTimeout(() => {
                     if (x8.mutelist.includes(serial) == false) {
                       x8.mutelist.push(serial)
@@ -4253,7 +4096,7 @@ async function fnbots(fn, m, asu) {
                     }
                     let suroloyo = []
                     suroloyo.push(serial)
-                    fn.groupRemove(toId, suroloyo)
+                    client.groupRemove(toId, suroloyo)
                   }, 700)
                 }
               }
@@ -4273,17 +4116,17 @@ async function fnbots(fn, m, asu) {
               if (stickerspam.has(serial) && !(stp.has(serial))) {
                 stp.add(serial);
                 if (isSadmin) {
-                  sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
+                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
                 } else if (master) {
-                  sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
+                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
                 } else if (vip) {
-                  sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
                 } else if (premium) {
-                  sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
                 } else if (isGroupAdmins) {
-                  sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
+                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
                 } else {
-                  sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
+                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
                   setTimeout(() => {
                     if (x8.mutelist.includes(serial) == false) {
                       x8.mutelist.push(serial)
@@ -4295,7 +4138,7 @@ async function fnbots(fn, m, asu) {
                     }
                     let suroloyo = []
                     suroloyo.push(serial)
-                    fn.groupRemove(toId, suroloyo)
+                    client.groupRemove(toId, suroloyo)
                   }, 700)
                 }
               }
@@ -4315,17 +4158,17 @@ async function fnbots(fn, m, asu) {
               if (stickerspam.has(serial) && !(stp.has(serial))) {
                 stp.add(serial);
                 if (isSadmin) {
-                  sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
+                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
                 } else if (master) {
-                  sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
+                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
                 } else if (vip) {
-                  sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
                 } else if (premium) {
-                  sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
                 } else if (isGroupAdmins) {
-                  sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
+                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
                 } else {
-                  sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
+                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
                   setTimeout(() => {
                     if (x8.mutelist.includes(serial) == false) {
                       x8.mutelist.push(serial)
@@ -4337,7 +4180,7 @@ async function fnbots(fn, m, asu) {
                     }
                     let suroloyo = []
                     suroloyo.push(serial)
-                    fn.groupRemove(toId, suroloyo)
+                    client.groupRemove(toId, suroloyo)
                   }, 700)
                 }
               }
@@ -4357,17 +4200,17 @@ async function fnbots(fn, m, asu) {
               if (stickerspam.has(serial) && !(stp.has(serial))) {
                 stp.add(serial);
                 if (isSadmin) {
-                  sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
+                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
                 } else if (master) {
-                  sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
+                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
                 } else if (vip) {
-                  sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
                 } else if (premium) {
-                  sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
                 } else if (isGroupAdmins) {
-                  sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
+                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
                 } else {
-                  sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
+                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
                   setTimeout(() => {
                     if (x8.mutelist.includes(serial) == false) {
                       x8.mutelist.push(serial)
@@ -4379,7 +4222,7 @@ async function fnbots(fn, m, asu) {
                     }
                     let suroloyo = []
                     suroloyo.push(serial)
-                    fn.groupRemove(toId, suroloyo)
+                    client.groupRemove(toId, suroloyo)
                   }, 700)
                 }
               }
@@ -4411,7 +4254,7 @@ async function fnbots(fn, m, asu) {
             }
             let suroloyo = []
             suroloyo.push(serial)
-            fn.groupRemove(toId, suroloyo)
+            client.groupRemove(toId, suroloyo)
           }
         }
       }
@@ -4442,16 +4285,16 @@ async function fnbots(fn, m, asu) {
       const usr = serial
       if (recentcmd.has(usr) || sban.has(usr)) {
         if (!(fspamm.has(usr) || (sban.has(usr)))) {
-          sendTextWithMentions(toId, `*hei @${usr.replace('@s.whatsapp.net', '')} you are on cooldown!*`, [usr]);
+          client.sendTextWithMentions(toId, `*hei @${usr.replace('@s.whatsapp.net', '')} you are on cooldown!*`, null);
           fspamm.add(usr);
         } else if (!(sban.has(usr))) {
-          sendTextWithMentions(toId, `*Hei @${usr.replace('@s.whatsapp.net', '')}*\n*COMMAND SPAM DETECTED*\n*Command banned for 15 minutes*`, [usr]);
+          client.sendTextWithMentions(toId, `*Hei @${usr.replace('@s.whatsapp.net', '')}*\n*COMMAND SPAM DETECTED*\n*Command banned for 15 minutes*`, null);
           sban.add(usr);
         }
       } else {
         for (let aa of cms) {
-          if (!isGroup) console.log(color('[EXEC]', 'yellow'), time, color(msgs(aa.toString())), 'from', color(notify))
-          if (isGroup) console.log(color('[EXEC]', 'yellow'), time, color(msgs(aa.toString())), 'from', color(notify), 'in', color(name))
+          if (!isGroup) console.log(color('[EXEC]', 'yellow'), time, color(msgs(aa.toString())), 'from', color(toId))
+          if (isGroup) console.log(color('[EXEC]', 'yellow'), time, color(msgs(aa.toString())), 'from', color(toId), 'in', color(name))
           txt = aa;
           if (isSadmin) {
             ctype = "master"
@@ -4500,7 +4343,7 @@ async function fnbots(fn, m, asu) {
               for (let i = 0; i < num; i++) {
                 if (ca.includes('@')) {
                   mentioned = m.message.extendedTextMessage.contextInfo.mentionedJid
-                  sendTextWithMentions(toId, ca, mentioned)
+                  client.sendTextWithMentions(toId, ca, mentioned)
                 } else {
                   sendText(toId, ca)
                 }
@@ -4568,7 +4411,7 @@ async function fnbots(fn, m, asu) {
                 }
                 const suroloyo = []
                 suroloyo.push(b)
-                sendTextWithMentions(toId, `sukses ubah limit menjadi ${a} kepada @${b.replace('@s.whatsapp.net','')}`, suroloyo)
+                client.sendTextWithMentions(toId, `sukses ubah limit menjadi ${a} kepada @${b.replace('@s.whatsapp.net', '')}`, suroloyo)
               } else {
                 const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
                 const a = args[0]
@@ -4579,14 +4422,14 @@ async function fnbots(fn, m, asu) {
                     dumpLimit()
                   }
                 }
-                sendTextWithMentions(toId, `sukses ubah limit menjadi ${a} kepada @${b.replace('@s.whatsapp.net','')}`, mentionedJidList)
+                client.sendTextWithMentions(toId, `sukses ubah limit menjadi ${a} kepada @${b.replace('@s.whatsapp.net', '')}`, mentionedJidList)
               }
             } else if (getPrefix(txt, 'addsticker')) {
               const add = arg
               console.log(arg)
               if (isMedia && !m.message.imageMessage || isQuotedVideo) {
                 const decryptMedia = isQuotedVideo ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
-                const stiker = await fn.downloadAndSaveMediaMessage(decryptMedia)
+                const stiker = await client.downloadAndSaveMediaMessage(decryptMedia)
                 const {
                   spawn
                 } = require("child_process");
@@ -4599,7 +4442,7 @@ async function fnbots(fn, m, asu) {
                 })
               } else if (isMedia && !m.message.videoMessage || isQuotedImage) {
                 const decryptMedia = isQuotedImage ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
-                const stiker = await fn.downloadAndSaveMediaMessage(decryptMedia)
+                const stiker = await client.downloadAndSaveMediaMessage(decryptMedia)
                 const {
                   exec
                 } = require("child_process");
@@ -4627,7 +4470,7 @@ async function fnbots(fn, m, asu) {
               if (isQuotedAudio) {
                 const add = arg
                 const filename = `./database/${add}.${mime.extension(m.message.extendedTextMessage.contextInfo.quotedMessage.audioMessage.mimetype)}`;
-                const mediaData = await fn.downloadMediaMessage(JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo)
+                const mediaData = await client.downloadMediaMessage(JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo)
                 const imageBase64 = `data:${m.message.extendedTextMessage.contextInfo.quotedMessage.audioMessage.mimetype};base64,${mediaData.toString('base64')}`
                 await fs.writeFile(filename, mediaData, function (err) {
                   if (err) {
@@ -4650,10 +4493,10 @@ async function fnbots(fn, m, asu) {
                 sendText(toId, "tidak ada didalam database bot.")
               }
             } else if (getComs(txt, 'deleteall')) {
-              const a = await fn.chats.all()
+              const a = await client.chats.all()
               console.log(a)
               for (let x of a) {
-                await fn.deleteChat(x.jid)
+                await client.deleteChat(x.jid)
               }
               sendReply(toId, 'Succes delete all chat!')
             } else if (getPrefix(txt, 'x')) {
@@ -4692,7 +4535,7 @@ async function fnbots(fn, m, asu) {
               }
             } else if (getPrefix(txt, 'nbc')) {
               let msg = arg
-              let groups = await fn.chats.all()
+              let groups = await client.chats.all()
               let arrOfGroup = []
               for (let index of groups) {
                 if (index.jid.includes('@g.us') == true) {
@@ -4706,7 +4549,7 @@ async function fnbots(fn, m, asu) {
               sendText(toId, 'Broadcast Success!')
             } else if (getPrefix(txt, 'wbc')) {
               let msg = arg
-              let groups = await fn.chats.all()
+              let groups = await client.chats.all()
               let arrOfGroup = []
               for (let index of groups) {
                 if (index.jid.includes('@g.us') == true) {
@@ -4727,9 +4570,9 @@ async function fnbots(fn, m, asu) {
                 anu += "\n{0}. @{1}".format(nom, i.replace('@s.whatsapp.net', ''))
                 nom += 1
               }
-              sendTextWithMentions(toId, anu, udud).catch((err) => sendText(toId, 'kosong'))
+              client.sendTextWithMentions(toId, anu, udud).catch((err) => sendText(toId, 'kosong'))
             } else if (getPrefix(txt, 'addbot')) {
-            	if (isQuotedMsg) {
+              if (isQuotedMsg) {
                 if (!settings.premium.includes(m.message.extendedTextMessage.contextInfo.participant)) {
                   settings.premium.push(m.message.extendedTextMessage.contextInfo.participant)
                   dumpSet()
@@ -4737,27 +4580,27 @@ async function fnbots(fn, m, asu) {
                   sendReply(toId, 'Sudah ada di list')
                 }
               } else {
-								try {
-									const mentiones = m.message.extendedTextMessage.contextInfo.mentionedJid
-									if (mentiones.length != 0) {
-										for (let men of mentiones) {
-											if (!settings.premium.includes(men)) {
-												settings.premium.push(men)
-												dumpSet()
-											} else {
-												sendReply(toId, 'Sudah ada di list')
-											}
-										}
-									}
-								} catch (err) {
-									const pea = args[0]
-									if (!settings.premium.includes(pea)) {
-										settings.premium.push(pea)
-										dumpSet()
-									} else {
-										sendReply(toId, 'Sudah ada di list')
-									}
-              	}
+                try {
+                  const mentiones = m.message.extendedTextMessage.contextInfo.mentionedJid
+                  if (mentiones.length != 0) {
+                    for (let men of mentiones) {
+                      if (!settings.premium.includes(men)) {
+                        settings.premium.push(men)
+                        dumpSet()
+                      } else {
+                        sendReply(toId, 'Sudah ada di list')
+                      }
+                    }
+                  }
+                } catch (err) {
+                  const pea = args[0]
+                  if (!settings.premium.includes(pea)) {
+                    settings.premium.push(pea)
+                    dumpSet()
+                  } else {
+                    sendReply(toId, 'Sudah ada di list')
+                  }
+                }
               }
               sendReply(toId, "User promoted as bot.")
             } else if (getPrefix(txt, 'delbot')) {
@@ -4780,7 +4623,7 @@ async function fnbots(fn, m, asu) {
                     anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                     nom += 1
                   }
-                  sendTextWithMentions(toId, anu, data)
+                  client.sendTextWithMentions(toId, anu, data)
                   dumpSet()
                 }
               }
@@ -4798,9 +4641,9 @@ async function fnbots(fn, m, asu) {
                 anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                 nom += 1
               }
-              await sendTextWithMentions(toId, anu, udud)
+              await client.sendTextWithMentions(toId, anu, udud)
             } else if (getPrefix(txt, "addowner")) {
-            	if (isQuotedMsg) {
+              if (isQuotedMsg) {
                 if (!InitUser.master.includes(m.message.extendedTextMessage.contextInfo.participant)) {
                   InitUser.master.push(m.message.extendedTextMessage.contextInfo.participant)
                   dumpMaster()
@@ -4808,27 +4651,27 @@ async function fnbots(fn, m, asu) {
                   sendReply(toId, 'Sudah ada di list')
                 }
               } else {
-              	try {
-              		const mentiones = m.message.extendedTextMessage.contextInfo.mentionedJid
-		              if (mentiones.length != 0) {
-		                for (let men of mentiones) {
-		                  if (!InitUser.master.includes(men)) {
-		                    InitUser.master.push(men)
-		                    dumpMaster()
-		                  } else {
-		                    sendReply(toId, 'Sudah ada di list')
-		                  }
-		                }
-		              } 
-              	} catch (err) {
-              		const pea = args[0]
-	                if (!InitUser.master.includes(pea)) {
-	                  InitUser.master.push(pea)
-	                  dumpMaster()
-	                } else {
-	                  sendReply(toId, 'Sudah ada di list')
-	                }
-              	}
+                try {
+                  const mentiones = m.message.extendedTextMessage.contextInfo.mentionedJid
+                  if (mentiones.length != 0) {
+                    for (let men of mentiones) {
+                      if (!InitUser.master.includes(men)) {
+                        InitUser.master.push(men)
+                        dumpMaster()
+                      } else {
+                        sendReply(toId, 'Sudah ada di list')
+                      }
+                    }
+                  }
+                } catch (err) {
+                  const pea = args[0]
+                  if (!InitUser.master.includes(pea)) {
+                    InitUser.master.push(pea)
+                    dumpMaster()
+                  } else {
+                    sendReply(toId, 'Sudah ada di list')
+                  }
+                }
               }
               sendReply(toId, "User promoted as owner.")
             } else if (getPrefix(txt, 'delowner')) {
@@ -4851,7 +4694,7 @@ async function fnbots(fn, m, asu) {
                     anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                     nom += 1
                   }
-                  sendTextWithMentions(toId, anu, data)
+                  client.sendTextWithMentions(toId, anu, data)
                   dumpMaster()
                 }
               }
@@ -4859,7 +4702,7 @@ async function fnbots(fn, m, asu) {
               InitUser.master = []
               dumpMaster()
               sendText(toId, "owner list reseted.")
-            }   
+            }
           }
           if (isMuted(toId) && !mtcState && banChat() && !isBanned || isSadmin || master || vip || premium || (isWhiteList(toId) && !isBanned)) {
             if (isSadmin || master) {
@@ -4894,17 +4737,17 @@ async function fnbots(fn, m, asu) {
                 sendReply(toId, 'autojoin tidak aktif')
               } else if (getComs(txt, 'stats')) {
                 await sendReply(toId, 'Sedang mengakumulasikan data...')
-					      let allchats = await fn.chats.all()
-					      let groups = []
-					      let chatIds = []
-					      for (let index of allchats) {
-					        if (index.jid.includes('@g.us') == true) {
-					          groups.push(index.jid)
-					        }
-					        if (index.jid.includes('@s.whatsapp.net') == true) {
-					          chatIds.push(index.jid)
-					        }
-					      }
+                let allchats = await client.chats.all()
+                let groups = []
+                let chatIds = []
+                for (let index of allchats) {
+                  if (index.jid.includes('@g.us') == true) {
+                    groups.push(index.jid)
+                  }
+                  if (index.jid.includes('@s.whatsapp.net') == true) {
+                    chatIds.push(index.jid)
+                  }
+                }
                 const k = getDescRank()
                 const kem = x4.limit
                 let text = `Status :\n`
@@ -4925,19 +4768,19 @@ async function fnbots(fn, m, asu) {
                 sendReply(toId, cts)
               } else if (getPrefix(txt, "upname")) {
                 const cui = arg
-                await fn.updateProfileName(cui)
+                await client.updateProfileName(cui)
                 sendReply(toId, "Name set: {0}".format(cui))
               } else if (getPrefix(txt, "upstatus")) {
                 const w1 = arg
-                await fn.setStatus(w1)
+                await client.setStatus(w1)
                 sendReply(toId, "Status set: {0}".format(w1))
               } else if (getComs(txt, 'setprofilepic')) {
-	              if (isMedia && !m.message.videoMessage || isQuotedImage) {
-	                const decryptMedia = isQuotedImage ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
-	                const stiker = await fn.downloadAndSaveMediaMessage(decryptMedia)
-	                await fn.updateProfilePicture(botNumber, stiker).then(() => sendText(toId, "success update profile picture"))
-	              }
-	            } else if (getPrefix(txt, "upapikey1")) {
+                if (isMedia && !m.message.videoMessage || isQuotedImage) {
+                  const decryptMedia = isQuotedImage ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
+                  const stiker = await client.downloadAndSaveMediaMessage(decryptMedia)
+                  await client.updateProfilePicture(botNumber, stiker).then(() => sendText(toId, "success update profile picture"))
+                }
+              } else if (getPrefix(txt, "upapikey1")) {
                 const cui = args[0]
                 settings.vhkey = cui;
                 dumpSet();
@@ -5011,19 +4854,19 @@ async function fnbots(fn, m, asu) {
                 dumpSet();
                 sendReply(toId, "Chatbot switched to: {0}".format(w1))
               } else if (getComs(txt, "mygroup")) {
-                const udud = await fn.chats.all()
+                const udud = await client.chats.all()
                 let groups = []
                 for (let index of udud) {
-					        if (index.jid.includes('@g.us') == true) {
-					          groups.push(index.jid)
-					        }
-					      }
+                  if (index.jid.includes('@g.us') == true) {
+                    groups.push(index.jid)
+                  }
+                }
                 mygroup = groups
                 let anu = "List Group " + BotName + " Joined:\n"
                 let nom = 1
                 for (let i of groups) {
-                	const s = fn.contacts[i]
-                	const {name} = s
+                  const s = client.contacts[i]
+                  const { name } = s
                   anu += "\n" + nom + ". " + name + "\n    ID: " + i + "\n"
                   nom += 1
                 }
@@ -5085,67 +4928,67 @@ async function fnbots(fn, m, asu) {
                 })
                 console.log('[INFO] Limit restarted!')
               } else if (getPrefix(txt, "resetin limit")) {
-              	if (isQuotedMsg) {
-	                for (let i of x4.limit) {
-		                if (i['id'] == m.message.extendedTextMessage.contextInfo.participant) {
-		                  i['limit'] = settings.limitCount
-		                  break
-		                  dumpLimit()
-		                }
-		              }
-	              } else {
-	              	try {
-	              		const mentiones = m.message.extendedTextMessage.contextInfo.mentionedJid
-			              if (mentiones.length != 0) {
-			                for (let men of mentiones) {
-			                  for (let i of x4.limit) {
-					                if (i['id'] == men) {
-					                  i['limit'] = settings.limitCount
-					                  break
-					                  dumpLimit()
-					                }
-					              }
-			                }
-			              } 
-	              	} catch (err) {
-	              		const pea = args[0]
-		                for (let i of x4.limit) {
-			                if (i['id'] == pea+'@s.whatsapp.net') {
-			                  i['limit'] = settings.limitCount
-			                  break
-			                  dumpLimit()
-			                }
-			              }
-	              	}
-	              }
-	              sendReply(toId, 'sukses reset limitnya bos')
-	            } 
-	            if (getPrefix(txt, 'premium')) {
+                if (isQuotedMsg) {
+                  for (let i of x4.limit) {
+                    if (i['id'] == m.message.extendedTextMessage.contextInfo.participant) {
+                      i['limit'] = settings.limitCount
+                      break
+                      dumpLimit()
+                    }
+                  }
+                } else {
+                  try {
+                    const mentiones = m.message.extendedTextMessage.contextInfo.mentionedJid
+                    if (mentiones.length != 0) {
+                      for (let men of mentiones) {
+                        for (let i of x4.limit) {
+                          if (i['id'] == men) {
+                            i['limit'] = settings.limitCount
+                            break
+                            dumpLimit()
+                          }
+                        }
+                      }
+                    }
+                  } catch (err) {
+                    const pea = args[0]
+                    for (let i of x4.limit) {
+                      if (i['id'] == pea + '@s.whatsapp.net') {
+                        i['limit'] = settings.limitCount
+                        break
+                        dumpLimit()
+                      }
+                    }
+                  }
+                }
+                sendReply(toId, 'sukses reset limitnya bos')
+              }
+              if (getPrefix(txt, 'premium')) {
                 if (ar[0] === 'add') {
-                	try {
-                		const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
-	                  if (mentionedJidList.length != 0) {
-	                    for (let benet of mentionedJidList) {
-	                      await addPremiumUser(benet, argsa[2], xa)
-	                      await sendReplyWithMentions(toId, `*「 PREMIUM ADDED 」*\n\n➸ *ID*: @${benet.replace(/@s.whatsapp.net/, '')}\n➸ *Expired*: ${ms(toMs(argsa[2])).days} day(s) ${ms(toMs(argsa[2])).hours} hour(s) ${ms(toMs(argsa[2])).minutes} minute(s)`, [benet], m)
-	                    }
-	                  } 
-                	} catch (err) {
-                		await addPremiumUser(argsa[1] + '@s.whatsapp.net', argsa[2], xa)
-	                  await sendReplyWithMentions(toId, `*「 PREMIUM ADDED 」*\n\n➸ *ID*: @${argsa[1]}\n➸ *Expired*: ${ms(toMs(argsa[2])).days} day(s) ${ms(toMs(argsa[2])).hours} hour(s) ${ms(toMs(argsa[2])).minutes} minute(s)`, [argsa[1]+'@s.whatsapp.net'], m)
-	                }
+                  try {
+                    const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
+                    if (mentionedJidList.length != 0) {
+                      for (let benet of mentionedJidList) {
+                        await addPremiumUser(benet, argsa[2], xa)
+                        await sendReplyWithMentions(toId, `*「 PREMIUM ADDED 」*\n\n➸ *ID*: @${benet.replace(/@s.whatsapp.net/, '')}\n➸ *Expired*: ${ms(toMs(argsa[2])).days} day(s) ${ms(toMs(argsa[2])).hours} hour(s) ${ms(toMs(argsa[2])).minutes} minute(s)`, [benet], m)
+                      }
+                    }
+                  } catch (err) {
+                    await addPremiumUser(argsa[1] + '@s.whatsapp.net', argsa[2], xa)
+                    await sendReplyWithMentions(toId, `*「 PREMIUM ADDED 」*\n\n➸ *ID*: @${argsa[1]}\n➸ *Expired*: ${ms(toMs(argsa[2])).days} day(s) ${ms(toMs(argsa[2])).hours} hour(s) ${ms(toMs(argsa[2])).minutes} minute(s)`, [argsa[1] + '@s.whatsapp.net'], m)
+                  }
                 } else if (ar[0] === 'del') {
-                	try {
-                		const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
-	                  if (mentionedJidList.length !== 0) {
-	                    if (mentionedJidList[0] === botNumber) return
-	                    xa.splice(getPremiumPosition(mentionedJidList[0], xa), 1)
-	                    fs.writeJSONSync('db/' + pukimaki + '.premium.json', xa, {
-	                      spaces: 2
-	                    })
-	                    await sendReply(toId, `Done deleted from premium user....`)
-	                  } 
-                	} catch (err) {
+                  try {
+                    const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
+                    if (mentionedJidList.length !== 0) {
+                      if (mentionedJidList[0] === botNumber) return
+                      xa.splice(getPremiumPosition(mentionedJidList[0], xa), 1)
+                      fs.writeJSONSync('db/' + pukimaki + '.premium.json', xa, {
+                        spaces: 2
+                      })
+                      await sendReply(toId, `Done deleted from premium user....`)
+                    }
+                  } catch (err) {
                     xa.splice(getPremiumPosition(args[1] + '@s.whatsapp.net', xa), 1)
                     fs.writeJSONSync('db/' + pukimaki + '.premium.json', xa, {
                       spaces: 2
@@ -5157,7 +5000,7 @@ async function fnbots(fn, m, asu) {
                   let no = 1;
                   let s = []
                   for (let a of xa) {
-                  	s.push(a.id)
+                    s.push(a.id)
                     const cekExp = ms(getPremiumExpired(a.id, xa) - Date.now())
                     ts += `\n${no}. @${a.id.replace('@s.whatsapp.net', '')}\n   Expired: ${cekExp.days} day(s) ${cekExp.hours} hour(s) ${cekExp.minutes} minute(s)\n`
                     no += 1;
@@ -5170,30 +5013,30 @@ async function fnbots(fn, m, asu) {
               }
               if (getPrefix(txt, 'vip')) {
                 if (ar[0] === 'add') {
-                	try {
-                		const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
-	                  if (mentionedJidList.length != 0) {
-	                    for (let benet of mentionedJidList) {
-	                      await addUserVIP(benet, argsa[2], xc)
-	                      await sendReplyWithMentions(toId, `*「 VIP ADDED 」*\n\n➸ *ID*: @${benet.replace(/@s.whatsapp.net/, '')}\n➸ *Expired*: ${ms(toMs(argsa[2])).days} day(s) ${ms(toMs(argsa[2])).hours} hour(s) ${ms(toMs(argsa[2])).minutes} minute(s)`, [benet], m)
-	                    }
-	                  } 
-                	} catch (err) {
-                		await addUserVIP(argsa[1] + '@s.whatsapp.net', argsa[2], xc)
-	                  await sendReplyWithMentions(toId, `*「 VIP ADDED 」*\n\n➸ *ID*: @${argsa[1]}\n➸ *Expired*: ${ms(toMs(argsa[2])).days} day(s) ${ms(toMs(argsa[2])).hours} hour(s) ${ms(toMs(argsa[2])).minutes} minute(s)`, [argsa[1]+'@s.whatsapp.net'], m)
-	                }
+                  try {
+                    const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
+                    if (mentionedJidList.length != 0) {
+                      for (let benet of mentionedJidList) {
+                        await addUserVIP(benet, argsa[2], xc)
+                        await sendReplyWithMentions(toId, `*「 VIP ADDED 」*\n\n➸ *ID*: @${benet.replace(/@s.whatsapp.net/, '')}\n➸ *Expired*: ${ms(toMs(argsa[2])).days} day(s) ${ms(toMs(argsa[2])).hours} hour(s) ${ms(toMs(argsa[2])).minutes} minute(s)`, [benet], m)
+                      }
+                    }
+                  } catch (err) {
+                    await addUserVIP(argsa[1] + '@s.whatsapp.net', argsa[2], xc)
+                    await sendReplyWithMentions(toId, `*「 VIP ADDED 」*\n\n➸ *ID*: @${argsa[1]}\n➸ *Expired*: ${ms(toMs(argsa[2])).days} day(s) ${ms(toMs(argsa[2])).hours} hour(s) ${ms(toMs(argsa[2])).minutes} minute(s)`, [argsa[1] + '@s.whatsapp.net'], m)
+                  }
                 } else if (ar[0] === 'del') {
-                	try {
-                		const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
-	                  if (mentionedJidList.length !== 0) {
-	                    if (mentionedJidList[0] === botNumber) return
-	                    xa.splice(getVIPposition(mentionedJidList[0], xc), 1)
-	                    fs.writeJSONSync('db/' + pukimaki + '.premium.json', xc, {
-	                      spaces: 2
-	                    })
-	                    await sendReply(toId, `Done deleted from vip user....`)
-	                  } 
-                	} catch (err) {
+                  try {
+                    const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
+                    if (mentionedJidList.length !== 0) {
+                      if (mentionedJidList[0] === botNumber) return
+                      xa.splice(getVIPposition(mentionedJidList[0], xc), 1)
+                      fs.writeJSONSync('db/' + pukimaki + '.premium.json', xc, {
+                        spaces: 2
+                      })
+                      await sendReply(toId, `Done deleted from vip user....`)
+                    }
+                  } catch (err) {
                     xa.splice(getVIPposition(args[1] + '@s.whatsapp.net', xc), 1)
                     fs.writeJSONSync('db/' + pukimaki + '.premium.json', xc, {
                       spaces: 2
@@ -5205,7 +5048,7 @@ async function fnbots(fn, m, asu) {
                   let no = 1;
                   let s = []
                   for (let a of xc) {
-                  	s.push(a.id)
+                    s.push(a.id)
                     const cekExp = ms(getVIPexpired(a.id, xc) - Date.now())
                     ts += `\n${no}. @${a.id.replace('@s.whatsapp.net', '')}\n   Expired: ${cekExp.days} day(s) ${cekExp.hours} hour(s) ${cekExp.minutes} minute(s)\n`
                     no += 1;
@@ -5224,8 +5067,8 @@ async function fnbots(fn, m, asu) {
                 let ts = "*## " + BotName + " WHITELIST ##*\n"
                 let no = 1;
                 for (let a of asuc) {
-                	const s = fn.contacts[a.id]
-                	const {name} = s
+                  const s = client.contacts[a.id]
+                  const { name } = s
                   ts += "\n{0}. {1}\n   nama: {2}\n   id: {3}\n".format(no, name, a.nama, a.id);
                   no += 1;
                 }
@@ -5267,10 +5110,10 @@ async function fnbots(fn, m, asu) {
                   anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                   nom += 1
                 }
-                sendTextWithMentions(toId, anu, udud)
+                client.sendTextWithMentions(toId, anu, udud)
               } else if (getComs(txt, 'unblockall')) {
                 for (let i = 0; i < blocked.length; i++) {
-                  await fn.blockUser(blocked[i], "remove")
+                  await client.blockUser(blocked[i], "remove")
                 }
                 sendReply(toId, 'done unblock all shitlist')
               }
@@ -5283,7 +5126,7 @@ async function fnbots(fn, m, asu) {
                   anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                   nom += 1
                 }
-                sendTextWithMentions(toId, anu, udud)
+                client.sendTextWithMentions(toId, anu, udud)
               }
               if (getComs(txt, "listmute")) {
                 const udud = x8.mutelist
@@ -5294,7 +5137,7 @@ async function fnbots(fn, m, asu) {
                   anu += "\n" + no + ". @" + udud[i].replace(/s.whatsapp.net/, "")
                   nom += 1
                 }
-                sendTextWithMentions(toId, anu, udud)
+                client.sendTextWithMentions(toId, anu, udud)
               } else if (getPrefix(txt, 'delmute')) {
                 try {
                   const mentiones = m.message.extendedTextMessage.contextInfo.mentionedJid
@@ -5328,7 +5171,7 @@ async function fnbots(fn, m, asu) {
                         anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                         nom += 1
                       }
-                      await sendTextWithMentions(toId, anu, udud)
+                      await client.sendTextWithMentions(toId, anu, udud)
                     }
                   }
                   dumpMute()
@@ -5357,8 +5200,8 @@ async function fnbots(fn, m, asu) {
                           dumpMute()
                         }
                       }
-                     sendReply(toId, "User added to mutelist")
-                    } 
+                      sendReply(toId, "User added to mutelist")
+                    }
                   } catch (err) {
                     const pea = args[0]
                     if (x8.mutelist.includes(pea) == false) {
@@ -5403,14 +5246,14 @@ async function fnbots(fn, m, asu) {
                 x8.mutelist = []
                 dumpMute()
                 sendReply(toId, "mutelist reseted.")
-              } 
+              }
               if (getComs(txt, "listblack")) {
                 const udud = x8.muted
                 let anu = "blacklist group & user:\n"
                 let nom = 1
                 for (let i of udud) {
-                  const s = fn.contacts[i]
-                  const {name} = s
+                  const s = client.contacts[i]
+                  const { name } = s
                   anu += "\n{0}. {1} | {2}".format(nom, i, name)
                   nom += 1
                 }
@@ -5449,10 +5292,10 @@ async function fnbots(fn, m, asu) {
                         anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                         nom += 1
                       }
-                      sendTextWithMentions(toId, anu, udud)
+                      client.sendTextWithMentions(toId, anu, udud)
                     }
                   }
-                  dumpMute() 
+                  dumpMute()
                 }
               }
               if (getComs(txt, "listwhite")) {
@@ -5461,8 +5304,8 @@ async function fnbots(fn, m, asu) {
                 let anu = "Whitelist Group:\n"
                 let nom = 1
                 for (let i of udud) {
-                  const s = fn.contacts[i]
-                  const {name} = s
+                  const s = client.contacts[i]
+                  const { name } = s
                   anu += "\n{0}. {1}".format(nom, name)
                   nom += 1
                 }
@@ -5519,7 +5362,7 @@ async function fnbots(fn, m, asu) {
                   anu += "\n{0}. @{1}".format(nom, i.replace('@s.whatsapp.net', ''))
                   nom += 1
                 }
-                sendTextWithMentions(toId, anu, udud)
+                client.sendTextWithMentions(toId, anu, udud)
               } else if (getPrefix(txt, 'addmimic')) {
                 if (isQuotedMsg) {
                   if (!settings.memec.includes(quotedParticipant)) {
@@ -5540,7 +5383,7 @@ async function fnbots(fn, m, asu) {
                           sendReply(toId, 'Sudah ada di list')
                         }
                       }
-                    } 
+                    }
                     sendReply(toId, "user add to mimic list")
                   } catch (err) {
                     const pea = args[0]
@@ -5573,7 +5416,7 @@ async function fnbots(fn, m, asu) {
                       anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                       nom += 1
                     }
-                    await sendTextWithMentions(toId, anu, udud)
+                    await client.sendTextWithMentions(toId, anu, udud)
                     dumpSet()
                   }
                 }
@@ -5589,21 +5432,21 @@ async function fnbots(fn, m, asu) {
                 if (mekimeki === false) return
                 mekimeki = false
                 sendReply(toId, 'mimic tidak aktif')
-              } 
+              }
               if (getComs(txt, 'leaveall')) {
-                let allchats = await fn.chats.all()
+                let allchats = await client.chats.all()
                 let arrOfGroup = []
                 for (let index of allchats) {
                   arrOfGroup.push(index.jid)
                 }
                 let arrOfGroups = arrOfGroup.filter(x => !isWhite(x))
                 for (let groupId of arrOfGroups) {
-                  await fn.groupLeave(groupId)
-                  await fn.modifyChat(groupId, ChatModification.delete)
+                  await client.groupLeave(groupId)
+                  await client.modifyChat(groupId, ChatModification.delete)
                 }
                 sendReply(toId, 'sukses leave non whitelist group')
               } else if (getComs(txt, 'clearall')) {
-                let allchats = await fn.chats.all()
+                let allchats = await client.chats.all()
                 let groups = []
                 let chatIds = []
                 for (let index of allchats) {
@@ -5618,31 +5461,31 @@ async function fnbots(fn, m, asu) {
                 let arrOfGroupsxxx = groups.filter(x => isWhite(x))
                 let chatsny = chats.filter(x => !(isWhite(x)))
                 for (let groupIds of arrOfGroups) {
-                  await fn.groupLeave(groupId)
-                  await fn.modifyChat(groupId, ChatModification.delete)
+                  await client.groupLeave(groupId)
+                  await client.modifyChat(groupId, ChatModification.delete)
                 }
                 for (let chats of chatsny) {
-                  await fn.modifyChat(chats, ChatModification.delete)
+                  await client.modifyChat(chats, ChatModification.delete)
                 }
                 for (let groupIds of arrOfGroupsxxx) {
-                  await fn.modifyChat(chats, ChatModification.clear)
+                  await client.modifyChat(chats, ChatModification.clear)
                 }
                 sendReply(toId, 'sukses!')
-              } 
+              }
               if (getPrefix(txt, 'broadcast')) {
                 let msg = arg
                 if (isQuotedMsg) {
                   const filename = `${t}.${mime.extension(quotedMsgObj.mimetype)}`
                   const mediaData = await decryptMedia(quotedMsgObj);
                   const imageBase64 = `data:${quotedMsgObj.mimetype};base64,${mediaData.toString('base64')}`
-                  let groups = await fn.getAllGroups()
+                  let groups = await client.getAllGroups()
                   let arrOfGroup = []
                   for (let index of groups) {
                     arrOfGroup.push(index.groupMetadata.id._serialized)
                   }
                   for (let groupId of arrOfGroup) {
                     if (!chat.isAnnounceGrpRestrict) {
-                      await fn.sendFile(groupId, imageBase64, filename, `[ ${BotName} Broadcast ]\n\n${msg}`).then(() => console.log(`success resend ${mimetype}`))
+                      await client.sendFile(groupId, imageBase64, filename, `[ ${BotName} Broadcast ]\n\n${msg}`).then(() => console.log(`success resend ${mimetype}`))
                     }
                   }
                   reply('Broadcast Success!')
@@ -5650,31 +5493,31 @@ async function fnbots(fn, m, asu) {
                   const filename = `${t}.${mime.extension(mimetype)}`
                   const mediaData = await decryptMedia(message);
                   const imageBase64 = `data:${mimetype};base64,${mediaData.toString('base64')}`
-                  let groups = await fn.getAllGroups()
+                  let groups = await client.getAllGroups()
                   let arrOfGroup = []
                   for (let index of groups) {
                     arrOfGroup.push(index.groupMetadata.id._serialized)
                   }
                   for (let groupId of arrOfGroup) {
                     if (!chat.isAnnounceGrpRestrict) {
-                      await fn.sendFile(groupId, imageBase64, filename, `[ ${BotName} Broadcast ]\n\n${msg}`).then(() => console.log(`success resend ${mimetype}`))
+                      await client.sendFile(groupId, imageBase64, filename, `[ ${BotName} Broadcast ]\n\n${msg}`).then(() => console.log(`success resend ${mimetype}`))
                     }
                   }
                   reply('Broadcast Success!')
                 } else {
-                  let groups = await fn.getAllGroups()
+                  let groups = await client.getAllGroups()
                   let arrOfGroup = []
                   for (let index of groups) {
                     arrOfGroup.push(index.groupMetadata.id._serialized)
                   }
                   for (let groupId of arrOfGroup) {
                     if (!chat.isAnnounceGrpRestrict) {
-                      await fn.sendText(groupId, `[ ${BotName} Broadcast ]\n\n${msg}`)
+                      await client.sendText(groupId, `[ ${BotName} Broadcast ]\n\n${msg}`)
                     }
                   }
                   reply('Broadcast Success!')
                 }
-              } 
+              }
             }
           } else {
             setTimeout(() => {
@@ -5700,142 +5543,34 @@ async function fnbots(fn, m, asu) {
       }, 15000);
     }
     if (txt == "ctest") {
-      let allchats = await fn.chats.all()
+      let allchats = await client.chats.all()
       console.log(allchats)
     } else if (txt == "kick") {
       let suroloyo = []
       suroloyo.push(serial)
       if (isGroup) {
         if (isBotGroupAdmins) {
-          fn.groupRemove(toId, suroloyo)
+          client.groupRemove(toId, suroloyo)
         }
       }
-    } 
+    }
     if (isMediaVideo) {
-      console.log(color('[EXEC]', 'yellow'), time, 'executed video from', color(notify))
+      console.log(color('[EXEC]', 'yellow'), time, 'executed video from', color(toId))
       await createExif(finebotline, finebotwhatsapp)
       console.log('kontolomatamu')
-      const mediaData = await fn.downloadMediaMessage(m)
+      const mediaData = await client.downloadMediaMessage(m)
       if (Buffer.byteLength(mediaData) >= 6186598.4) return sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
       modifWebp(jam, mediaData).then(res => {
-        fn.sendMessage(toId, res, MessageType.sticker, {
+        client.sendMessage(toId, res, MessageType.sticker, {
           quoted: m
         })
       })
     } else
-    if (isMediaImage) {
-      console.log(color('[EXEC]', 'yellow'), time, 'executed image from', color(notify))
-      await createExif(finebotline, finebotwhatsapp)
-      console.log('kontoloke')
-      await fn.downloadMediaMessage(m).then(mediaData => {
-        sharp(mediaData).resize({
-          width: 512,
-          height: 512,
-          fit: sharp.fit.contain,
-          background: {
-            r: 0,
-            g: 0,
-            b: 0,
-            alpha: 0
-          }
-        }).webp().toBuffer().then(buffer => {
-          modifExif(buffer, jam, (res) => {
-            fn.sendMessage(toId, res, MessageType.sticker, {
-              quoted: m
-            })
-          })
-        })
-      })
-    }
-    if ((txt == "hi") || (txt == "halo") || (txt == "help") || (txt == ".help") || (txt == "!help") || (txt == "#help") || (txt == "/help") || (txt == "commands") || (txt == "menu") || (txt == "bot") || (txt == "cmd")) {
-      let cp = "👋 hello, please send me a video, image, or gif and I'll turn it into a sticker!\n"
-      cp += "📦 If you send a picture/video/gif, then the shape is not a square, then I will change it to contain sticker!\n"
-      /*
-      cp += "ℹ️ PS. You can change author name and sticker pack name if you send\n\n"
-      cp += "        ```sticker``` *authorpack | packname*\n\n"
-      */
-      cp += "ℹ️ PS. follow instagram.com/wa.bot, if this bot gets banned, new number will be posted there :)\n"
-      cp += "☕️ Buy me a coffee with ```donate``` to support this bot\n"
-      sendText(toId, cp)
-    } else 
-    /*
-    if ((txt == "sticker") || (txt == "!sticker") || (txt == ".sticker") || (txt == "#sticker") || (txt == "$sticker")) {
-      const a = "created by: fnbots"
-      const b = "fine ganteng banget"
-      const teks = 'processing data, please wait'
-      await createExif(a, b)
-      await sleep(3000)
-      await sendReply(toId, teks)
-      let op = "author: " + a + "\n"
-      op += "pack: " + b + "\n"
-      op += "name: fnbots"
-      if (isMedia && !m.message.imageMessage || isQuotedVideo) {
-        const decryptMedia = isQuotedVideo ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
-        const mediaData = await fn.downloadMediaMessage(decryptMedia)
-        if (Buffer.byteLength(mediaData) >= 6186598.4) return sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
-        modifWebp(jam, mediaData).then(res => {
-          fn.sendMessage(toId, res, MessageType.sticker, {
-            contextInfo: {
-              participant: "628128611862@s.whatsapp.net",
-              quotedMessage: {
-                conversation: op
-              }
-            }
-          })
-        })
-      } else
-      if (isMedia && !m.message.videoMessage || isQuotedImage) {
-        const decryptMedia = isQuotedImage ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
-        let asu = (fs.readFileSync('./image/image.jpg', {
-          encoding: 'base64'
-        }))
-        const roundedCorners = Buffer.from(
-          '<svg><rect x="0" y="0" width="600" height="600" rx="300" ry="300"/></svg>'
-        );
-        await fn.downloadMediaMessage(decryptMedia).then(mediaData => {
-          sharp(mediaData).resize({
-            width: 600,
-            height: 600
-          }).composite([{
-            input: roundedCorners,
-            blend: 'dest-in'
-          }]).webp().toBuffer().then(buffer => {
-            modifExif(buffer, jam, (res) => {
-              fn.sendMessage(toId, res, MessageType.sticker, {
-                quoted: m,
-                thumbnail: asu.toString("base64")
-              })
-            })
-          })
-        })
-      }
-    } else 
-    if (txt.startsWith("sticker")) {
-      const a = arg.split('|')[0]
-      const b = arg.split('|')[1]
-      const teks = 'processing data, please wait'
-      await createExif(a, b)
-      await sleep(3000)
-      await sendReply(toId, teks)
-      if (isMedia && !m.message.imageMessage || isQuotedVideo) {
-        const decryptMedia = isQuotedVideo ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
-        const mediaData = await fn.downloadMediaMessage(decryptMedia)
-        if (Buffer.byteLength(mediaData) >= 6186598.4) return sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
-        let asu = (fs.readFileSync('./image/image.jpg', {
-          encoding: 'base64'
-        }))
-        modifWebp(jam, mediaData).then(res => {
-          fn.sendMessage(toId, res, MessageType.sticker, {
-            quoted: m,
-            thumbnail: asu.toString("base64")
-          })
-        })
-      } else if (isMedia && !m.message.videoMessage || isQuotedImage) {
-        const decryptMedia = isQuotedImage ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
-        let asu = (fs.readFileSync('./image/image.jpg', {
-          encoding: 'base64'
-        }))
-        await fn.downloadMediaMessage(decryptMedia).then(mediaData => {
+      if (isMediaImage) {
+        console.log(color('[EXEC]', 'yellow'), time, 'executed image from', color(toId))
+        await createExif(finebotline, finebotwhatsapp)
+        console.log('kontoloke')
+        await client.downloadMediaMessage(m).then(mediaData => {
           sharp(mediaData).resize({
             width: 512,
             height: 512,
@@ -5848,118 +5583,226 @@ async function fnbots(fn, m, asu) {
             }
           }).webp().toBuffer().then(buffer => {
             modifExif(buffer, jam, (res) => {
-              fn.sendMessage(toId, res, MessageType.sticker, {
-                quoted: m,
-                thumbnail: asu.toString("base64")
+              client.sendMessage(toId, res, MessageType.sticker, {
+                quoted: m
               })
             })
           })
         })
       }
-    } else 
-    */
-    if (txt == "me") {
-      if (isGroup) {
-        const num = m.participant
-        const picture = num.replace("@s.whatsapp.net", "")
-        let pict = ""
-        try {
-          pict = await fn.getProfilePicture(picture)
-        } catch {
-          pict = "https://user-images.githubusercontent.com/70086013/103155250-749abe00-47d0-11eb-82b1-5b3a4f3182f8.jpg"
-        }
-        pict = pict
-        const response = await axios({
-          method: "get",
-          url: pict,
-          responseType: 'arraybuffer'
-        })
-        let status = await fn.getStatus(picture)
-        let teks = `Name: @${num.split('@')[0]}\n`
-        teks += `Status: ${status.status}`
-        let asu = (fs.readFileSync('./image/image.jpg', {
-          encoding: 'base64'
-        }))
-        fn.sendMessage(toId, response.data, MessageType.image, {
-          caption: teks,
-          thumbnail: asu.toString("base64"),
-          contextInfo: {
-            "mentionedJid": [num]
-          }
-        })
-      } else {
-        num = toId
-        const picture = num.replace("@s.whatsapp.net", "")
-        let pict = ""
-        try {
-          pict = await fn.getProfilePicture(picture)
-        } catch {
-          pict = "https://user-images.githubusercontent.com/70086013/103155250-749abe00-47d0-11eb-82b1-5b3a4f3182f8.jpg"
-        }
-        const response = await axios({
-          method: "get",
-          url: pict,
-          responseType: 'arraybuffer'
-        })
-        let status = await fn.getStatus(picture)
-        let teks = `Name: @${num.split('@')[0]}\n`
-        teks += `Status: ${status.status}`
-        let asu = (fs.readFileSync('./image/image.jpg', {
-          encoding: 'base64'
-        }))
-        fn.sendMessage(toId, response.data, MessageType.image, {
-          caption: teks,
-          thumbnail: asu.toString("base64"),
-          contextInfo: {
-            "mentionedJid": [num]
-          }
-        })
-      }
+    if ((txt == "hi") || (txt == "halo") || (txt == "help") || (txt == ".help") || (txt == "!help") || (txt == "#help") || (txt == "/help") || (txt == "commands") || (txt == "menu") || (txt == "bot") || (txt == "cmd")) {
+      let cp = "👋 hello, please send me a video, image, or gif and I'll turn it into a sticker!\n"
+      cp += "📦 If you send a picture/video/gif, then the shape is not a square, then I will change it to contain sticker!\n"
+      /*
+      cp += "ℹ️ PS. You can change author name and sticker pack name if you send\n\n"
+      cp += "        ```sticker``` *authorpack | packname*\n\n"
+      */
+      cp += "ℹ️ PS. follow instagram.com/wa.bot, if this bot gets banned, new number will be posted there :)\n"
+      cp += "☕️ Buy me a coffee with ```donate``` to support this bot\n"
+      sendText(toId, cp)
     } else
-    if (txt.startsWith("fakereply")) {
-      if (isGroup) {
-        const a = arg.split('|')[0]
-        const b = arg.split('|')[1]
-        const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
-        fn.sendMessage(toId, a, MessageType.text, {
-          contextInfo: {
-            participant: mentionedJidList[0],
-            quotedMessage: {
-              conversation: b
-            }
-          }
-        })
-      } else {
-        const a = arg.split('|')[0]
-        const b = arg.split('|')[1]
-        fn.sendMessage(toId, a, MessageType.text, {
-          contextInfo: {
-            participant: toId,
-            quotedMessage: {
-              conversation: b
-            }
-          }
-        })
-      }
-    } else 
-    if (txt == "stfu") {
-      if (!isSadmin) return
-      const more = String.fromCharCode(8206)
-      const readMore = more.repeat(4001)
-      members_id = []
-      teks = 'woi jangan buka'+readMore+'😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙'
-      for (let mem of groupMembers) {
-        members_id.push(mem.jid)
-      }
-      const tag = {
-        text: teks,
-        contextInfo: {
-            mentionedJid: members_id
+      /*
+      if ((txt == "sticker") || (txt == "!sticker") || (txt == ".sticker") || (txt == "#sticker") || (txt == "$sticker")) {
+        const a = "created by: fnbots"
+        const b = "fine ganteng banget"
+        const teks = 'processing data, please wait'
+        await createExif(a, b)
+        await sleep(3000)
+        await sendReply(toId, teks)
+        let op = "author: " + a + "\n"
+        op += "pack: " + b + "\n"
+        op += "name: fnbots"
+        if (isMedia && !m.message.imageMessage || isQuotedVideo) {
+          const decryptMedia = isQuotedVideo ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
+          const mediaData = await client.downloadMediaMessage(decryptMedia)
+          if (Buffer.byteLength(mediaData) >= 6186598.4) return sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
+          modifWebp(jam, mediaData).then(res => {
+            client.sendMessage(toId, res, MessageType.sticker, {
+              contextInfo: {
+                participant: "628128611862@s.whatsapp.net",
+                quotedMessage: {
+                  conversation: op
+                }
+              }
+            })
+          })
+        } else
+        if (isMedia && !m.message.videoMessage || isQuotedImage) {
+          const decryptMedia = isQuotedImage ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
+          let asu = (fs.readFileSync('./image/image.jpg', {
+            encoding: 'base64'
+          }))
+          const roundedCorners = Buffer.from(
+            '<svg><rect x="0" y="0" width="600" height="600" rx="300" ry="300"/></svg>'
+          );
+          await client.downloadMediaMessage(decryptMedia).then(mediaData => {
+            sharp(mediaData).resize({
+              width: 600,
+              height: 600
+            }).composite([{
+              input: roundedCorners,
+              blend: 'dest-in'
+            }]).webp().toBuffer().then(buffer => {
+              modifExif(buffer, jam, (res) => {
+                client.sendMessage(toId, res, MessageType.sticker, {
+                  quoted: m,
+                  thumbnail: asu.toString("base64")
+                })
+              })
+            })
+          })
         }
-      }
-      await fn.sendMessage(toId, tag, text)
-      await fn.modifyChat(toId, ChatModification.clear)
-    }
+      } else 
+      if (txt.startsWith("sticker")) {
+        const a = arg.split('|')[0]
+        const b = arg.split('|')[1]
+        const teks = 'processing data, please wait'
+        await createExif(a, b)
+        await sleep(3000)
+        await sendReply(toId, teks)
+        if (isMedia && !m.message.imageMessage || isQuotedVideo) {
+          const decryptMedia = isQuotedVideo ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
+          const mediaData = await client.downloadMediaMessage(decryptMedia)
+          if (Buffer.byteLength(mediaData) >= 6186598.4) return sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
+          let asu = (fs.readFileSync('./image/image.jpg', {
+            encoding: 'base64'
+          }))
+          modifWebp(jam, mediaData).then(res => {
+            client.sendMessage(toId, res, MessageType.sticker, {
+              quoted: m,
+              thumbnail: asu.toString("base64")
+            })
+          })
+        } else if (isMedia && !m.message.videoMessage || isQuotedImage) {
+          const decryptMedia = isQuotedImage ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
+          let asu = (fs.readFileSync('./image/image.jpg', {
+            encoding: 'base64'
+          }))
+          await client.downloadMediaMessage(decryptMedia).then(mediaData => {
+            sharp(mediaData).resize({
+              width: 512,
+              height: 512,
+              fit: sharp.fit.contain,
+              background: {
+                r: 0,
+                g: 0,
+                b: 0,
+                alpha: 0
+              }
+            }).webp().toBuffer().then(buffer => {
+              modifExif(buffer, jam, (res) => {
+                client.sendMessage(toId, res, MessageType.sticker, {
+                  quoted: m,
+                  thumbnail: asu.toString("base64")
+                })
+              })
+            })
+          })
+        }
+      } else 
+      */
+      if (txt == "me") {
+        if (isGroup) {
+          const num = m.participant
+          const picture = num.replace("@s.whatsapp.net", "")
+          let pict = ""
+          try {
+            pict = await client.getProfilePicture(picture)
+          } catch {
+            pict = "https://user-images.githubusercontent.com/70086013/103155250-749abe00-47d0-11eb-82b1-5b3a4f3182f8.jpg"
+          }
+          pict = pict
+          const response = await axios({
+            method: "get",
+            url: pict,
+            responseType: 'arraybuffer'
+          })
+          let status = await client.getStatus(picture)
+          let teks = `Name: @${num.split('@')[0]}\n`
+          teks += `Status: ${status.status}`
+          let asu = (fs.readFileSync('./image/image.jpg', {
+            encoding: 'base64'
+          }))
+          client.sendMessage(toId, response.data, MessageType.image, {
+            caption: teks,
+            thumbnail: asu.toString("base64"),
+            contextInfo: {
+              "mentionedJid": [num]
+            }
+          })
+        } else {
+          num = toId
+          const picture = num.replace("@s.whatsapp.net", "")
+          let pict = ""
+          try {
+            pict = await client.getProfilePicture(picture)
+          } catch {
+            pict = "https://user-images.githubusercontent.com/70086013/103155250-749abe00-47d0-11eb-82b1-5b3a4f3182f8.jpg"
+          }
+          const response = await axios({
+            method: "get",
+            url: pict,
+            responseType: 'arraybuffer'
+          })
+          let status = await client.getStatus(picture)
+          let teks = `Name: @${num.split('@')[0]}\n`
+          teks += `Status: ${status.status}`
+          let asu = (fs.readFileSync('./image/image.jpg', {
+            encoding: 'base64'
+          }))
+          client.sendMessage(toId, response.data, MessageType.image, {
+            caption: teks,
+            thumbnail: asu.toString("base64"),
+            contextInfo: {
+              "mentionedJid": [num]
+            }
+          })
+        }
+      } else
+        if (txt.startsWith("fakereply")) {
+          if (isGroup) {
+            const a = arg.split('|')[0]
+            const b = arg.split('|')[1]
+            const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
+            client.sendMessage(toId, a, MessageType.text, {
+              contextInfo: {
+                participant: mentionedJidList[0],
+                quotedMessage: {
+                  conversation: b
+                }
+              }
+            })
+          } else {
+            const a = arg.split('|')[0]
+            const b = arg.split('|')[1]
+            client.sendMessage(toId, a, MessageType.text, {
+              contextInfo: {
+                participant: toId,
+                quotedMessage: {
+                  conversation: b
+                }
+              }
+            })
+          }
+        } else
+          if (txt == "stfu") {
+            if (!isSadmin) return
+            const more = String.fromCharCode(8206)
+            const readMore = more.repeat(4001)
+            members_id = []
+            teks = 'woi jangan buka' + readMore + '😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙'
+            for (let mem of groupMembers) {
+              members_id.push(mem.jid)
+            }
+            const tag = {
+              text: teks,
+              contextInfo: {
+                mentionedJid: members_id
+              }
+            }
+            await client.sendMessage(toId, tag, text)
+            await client.modifyChat(toId, ChatModification.clear)
+          }
   } catch (err) {
     console.log(err)
   }
@@ -5971,4 +5814,17 @@ starts().catch(e => {
   xsa.execCommand(pukimak).catch(err => {
     console.log("os >>>", err);
   })
+})
+
+process.on('uncaughtException', function (err) {
+  let e = String(err)
+  if (e.includes("conflict")) return
+  if (e.includes("Socket connection timeout")) return
+  if (e.includes("not-authorized")) return
+  if (e.includes("already-exists")) return
+  if (e.includes("rate-overlimit")) return
+  if (e.includes("Connection Closed")) return
+  if (e.includes("Timed Out")) return
+  if (e.includes("Value not found")) return
+  console.log('Caught exception: ', err)
 })
