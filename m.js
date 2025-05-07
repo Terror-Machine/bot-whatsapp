@@ -57,7 +57,7 @@ const FormData = require('form-data')
 const sort = require('arr-sort')
 const { execSync } = require('child_process');
 const pukimaki = "fnbots"
-const pukimak = "pm2 restart m"
+const pukimak = "node m.js"
 momenSetup(moments);
 
 let silent = false
@@ -3222,16 +3222,6 @@ const modifWebp = (id, buffers) => new Promise((resolve) => {
     })
 })
 
-if (isRestart === true) {
-  starts().then(() => {
-    client.sendMessage("6285712453005@s.whatsapp.net", { text: 'restart succes!' })
-    settings.restartState = false
-    isRestart = false
-    settings.restartId = "undefined"
-    dumpSet()
-  })
-}
-
 const store = makeInMemoryStore({
   logger: pino().child({
     level: 'silent',
@@ -3330,7 +3320,6 @@ async function starts() {
         verticalLayout: 'full'
       })))
       console.log('---------------------------------------------------------------------------')
-      console.log(`\x1b[32m✅ Bot WhatsApp Terhubung!\x1b[0m`);
     }
     if (
       connection === "close" &&
@@ -3342,9 +3331,17 @@ async function starts() {
     }
   })
 
-  client.ev.on('messages.upsert', async ({ messages }) => {
+  client.ev.on('messages.upsert', async ({ type, messages }) => {
     try {
-      await fnbots(client, messages, false)
+      if (type !== "notify") return
+      for (let m of messages) {
+        if (!m.message) continue
+        m.message = m.message?.ephemeralMessage?.message || m.message
+        if (store.groupMetadata && !Object.keys(store.groupMetadata).length) {
+          store.groupMetadata = await client.groupFetchAllParticipating()
+        }
+        await fnbots(client, m, false)
+      }
     } catch (error) {
       console.log(error.message)
     }
@@ -3371,15 +3368,6 @@ async function starts() {
     xsa.execCommand(pukimak).catch(err => {
       console.log("os >>>", err);
     })
-  })
-
-  client.ev.on('messages.upsert', async chatUpdate => {
-    if (global.autoswview) {
-      mek = chatUpdate.messages[0]
-      if (mek.key && mek.key.remoteJid === 'status@broadcast') {
-        await client.readMessages([mek.key])
-      }
-    }
   })
 
   client.decodeJid = (jid) => {
@@ -3425,6 +3413,12 @@ async function starts() {
     quoted,
     ...options
   })
+
+  client.sendReply = async (jid, text, quoted = null) => client.sendMessage(jid, { 
+    text: text 
+  }, { 
+    quoted: quoted 
+  });
 
   client.sendTextWithMentions = async (jid, text, quoted, options = {}) => client.sendMessage(jid, {
     text: text,
@@ -3501,10 +3495,36 @@ async function starts() {
 
     return buffer
   }
+
+  client.sendImageMessage = async (jid, text, imagePath, quoted = null) => {
+    try {
+      await client.sendMessage(jid, {
+        image: { stream: fs.createReadStream(imagePath) },
+        caption: text,
+      }, { quoted: quoted });
+
+    } catch (error) {
+      console.error("❌ Error saat mengirim gambar:", error);
+    }
+};
+
+  client.sendContact = async (jid, text, nomor, quoted = null) => {
+    var vcard = 'BEGIN:VCARD\n' + 'VERSION:3.0\n' + 'FN:' + text + '\n' + 'ORG:' + text + ';\n' + 'TEL;type=CELL;type=VOICE;waid=' + nomor + ':+' + nomor + '\n' + 'END:VCARD'
+    client.sendMessage(jid, {
+      contacts: {
+        displayName: text,
+        contacts: [{
+          vcard
+        }]
+      }
+    }, {
+      quoted: quoted
+    })
+  }
+
 }
 //-----------------------util--------------------//
-
-async function fnbots(client, messages, asu) {
+const fnbots = async (client, m, asu) => {
   silent = false;
   origin = false;
   if (asu) {
@@ -3513,8 +3533,8 @@ async function fnbots(client, messages, asu) {
     suggested = false
   }
   try {
-    const m = messages[0]
     const messageContent = JSON.stringify(m, undefined, 2)
+    console.log(messageContent)
     const {
       key,
       messageTimestamp,
@@ -3522,7 +3542,6 @@ async function fnbots(client, messages, asu) {
       pushName,
       message
     } = messageContent
-    if (!messages || messages.length === 0) return;
     if (debugs) {
       if (m.key.remoteJid === settings.admin) {
         console.log(m)
@@ -3604,28 +3623,6 @@ async function fnbots(client, messages, asu) {
       }
       client.sendMessage(toId, tag, text)
     }
-    const sendReply = (toId, teks) => {
-      client.sendMessage(toId, teks, text, {
-        quoted: m
-      })
-    }
-    const sendImage = (toId, pathfile = '', teks) => {
-      client.sendMessage(toId, pathfile, MessageType.image, {
-        caption: teks
-      })
-    }
-    const sendContact = (toId, teks, teks2) => {
-      const vcard = 'BEGIN:VCARD\n' +
-        'VERSION:3.0\n' +
-        'FN:' + teks + '\n' +
-        'ORG:FNBOTS\n' +
-        'TEL;type=CELL;type=VOICE;waid=' + teks2.split("@s.whatsapp.net")[0] + ':+' + teks2.split("@s.whatsapp.net")[0] + '\n' +
-        'END:VCARD'
-      client.sendMessage(toId, {
-        displayname: teks,
-        vcard: vcard
-      }, MessageType.contact)
-    }
 
     await expiredVIPcheck(xc)
     await expiredCheck(xa)
@@ -3661,7 +3658,7 @@ async function fnbots(client, messages, asu) {
             let limits = i.limit;
             if (limits <= 0) {
               found = true;
-              sendReply(serial, 'silakan bermain game besok lagi')
+              client.sendReply(serial, 'silakan bermain game besok lagi', m)
               return true;
             } else {
               xi.limitgame
@@ -3687,7 +3684,7 @@ async function fnbots(client, messages, asu) {
           if (limits <= 0) {
             found = true;
             let tst = 'silakan bermain game kembali besok. anda telah mencapai batas'
-            sendReply(serial, tst)
+            client.sendReply(serial, tst, m)
             return true;
           } else {
             xi.limitgame
@@ -3733,7 +3730,7 @@ async function fnbots(client, messages, asu) {
             let limits = i.limit;
             if (limits <= 0) {
               found = true;
-              sendReply(serial, 'limit anda telah habis')
+              client.sendReply(serial, 'limit anda telah habis', m)
               return true;
             } else {
               x4.limit
@@ -3762,7 +3759,7 @@ async function fnbots(client, messages, asu) {
             tst += 'ketik ' + settings.sname + 'order untuk menambah limit\n'
             tst += 'ketik ' + settings.rname + 'rules untuk mengetahui Term & Condition\n'
             tst += autocommand
-            sendReply(serial, tst)
+            client.sendReply(serial, tst, m)
             return true;
           } else {
             x4.limit
@@ -3849,6 +3846,7 @@ async function fnbots(client, messages, asu) {
       })
       if (found !== false) {
         x7.hitcount[found].counts += 1;
+        console.log(x7.hitcount[found].counts)
         dumpCount()
       }
     }
@@ -3874,7 +3872,7 @@ async function fnbots(client, messages, asu) {
       let output
       try {
         output = func((...args) => {
-          sendReply(toId, util.format(...args))
+          client.sendReply(toId, util.format(...args), m)
         }, client, toId, m, body, require, teks => teks.replace(/^(async function|function|async).+\(.+?\).+{/, `case 'command':`).replace(/this\.(teks|url|args)/g, (_, teks) => {
           switch (txt) {
             case 'teks':
@@ -3890,9 +3888,9 @@ async function fnbots(client, messages, asu) {
               return _
           }
         }).replace(/}$/, '    break'))
-        sendReply(toId, util.format(output))
+        client.sendReply(toId, util.format(output), m)
       } catch (e) {
-        sendReply(toId, util.format(e))
+        client.sendReply(toId, util.format(e), m)
       }
     } else if ((body || '').startsWith('.exec ')) {
       if (!isSadmin) return
@@ -3903,169 +3901,39 @@ async function fnbots(client, messages, asu) {
           timeout: 30000,
           encoding: 'utf8'
         });
-        return sendReply(toId, stdout)
+        return client.sendReply(toId, stdout, m)
       } catch (err) {
-        return sendReply(toId, err.stderr)
+        return client.sendReply(toId, err.stderr, m)
       }
     }
 
     if (body == "rname") {
       jancokasuceleng()
-      if (isCount(serial)) return
-      counthit(serial)
+      if (isCount(serial)) {
+        return
+      } else {
+        counthit(serial)
+      }
       client.sendText(toId, settings.rname)
     } else if (body == "sname") {
       jancokasuceleng()
-      if (isCount(serial)) return
-      counthit(serial)
-      client.sendText(toId, settings.sname)
-    } else if (body == "r") {
-      jancokasuceleng()
-      if (isCount(serial)) return
-      counthit(serial)
-      if (isSadmin || master) {
-        sendText(toId, 'restarting client...')
-        settings.restartState = true
-        settings.restartId = toId
-        dumpSet()
-        var xsa = new os_spawn();
-        xsa.execCommand(pukimak).then(res => { }).catch(err => {
-          console.log("os >>>", err);
-        })
+      if (isCount(serial)) {
+        return
+      } else {
+        counthit(serial)
       }
-    } else if ((body == settings.sname + "sponsor") || (body == settings.rname + "sponsor")) {
-      let tx = '*Beli VPS hosting / Dedicated hosting / RDP bulanan, tahunan, Mantab dan Murah.*\n'
-      tx += '*Langsung Order http://bit.ly/order_bang*'
-      sendReply(toId, tx)
-    } else if ((body == settings.sname + "premium") || (body == settings.rname + "premium")) {
-      let tx = 'apa itu premium?\n'
-      tx += 'premium adalah filter khusus untuk user berbayar dengan fasilitas full.\n'
-      tx += '1. anti banned bot ketika spam\n'
-      tx += '2. anti mute/silent dari bot dimana aja\n'
-      tx += '3. semua fitur terbuka untuk premium user\n'
-      tx += '4. jika ketemu ' + BotName + ' di grup lain, dan kebetulan ' + BotName + ' adalah admin digrup tersebut, kamu bisa akses admin juga via bot!\n'
-      tx += '5. prioritas diutamakan, bisa request feature, jika ada update, lebih didahulukan\n'
-      tx += '6. discredit limit? berkurang 1, jadi 100x lipatnya free member, dan bisa 100x command premium dalam sehari!\n'
-      tx += '7. bisa bawa pulang bot ke 1 grupmu juga loh!\n'
-      tx += '8. didalam grup, jika kamu adalah premium, maka kastamu lebih tinggi daripada admin grup di system bot\n\n'
-      tx += 'kenapa gak jadi premium aja dengan segala keuntungan? cuman seharga 20k/bulan kok. :D\n'
-      tx += 'mau jadi premium? hubungi creator dengan ketik /order'
-      sendReply(toId, tx)
+      client.sendText(toId, settings.sname)
     } else if ((body == settings.sname + "creator") || (body == settings.rname + "creator")) {
       let a = '```NAMA: Fn```\n'
-      a += '```INSTAGRAM:``` *https://instagram.com/wa.bot*\n'
+      a += '```INSTAGRAM:``` *https://instagram.com/fnbots*\n'
       a += '```GITHUB:``` *https://github.com/Terror-Machine*'
-      await sendImage(toId, `./media/fotobot.jpeg`, a)
-      const targ = admin
-      const vcard = 'BEGIN:VCARD\n' +
-        'VERSION:3.0\n' +
-        'FN:Creator\n' +
-        'ORG:FNBOTS\n' +
-        'TEL;type=CELL;type=VOICE;waid=' + targ.split("@s.whatsapp.net")[0] + ':+' + targ.split("@s.whatsapp.net")[0] + '\n' +
-        'END:VCARD'
-      client.sendMessage(toId, {
-        displayname: "",
-        vcard: vcard
-      }, MessageType.contact)
-    } else if ((body == settings.sname + "donasi") || (body == settings.rname + "donasi")) {
-      let tx = 'supaya bot bisa jalan terus, dan kamu bisa pakai terus ini bot, please bantu creator dengan donasi!\n\n'
-      tx += 'OVO: 081286118629\n'
-      tx += 'DANA: 081286118629\n'
-      tx += 'GOPAY: 081286118629\n'
-      tx += 'PULSA: 087780778896\n\n'
-      tx += 'Berapapun nominalnya, asalkan kamu ikhlas, creator jadi makin semangat buat berkarya.'
-      sendReply(toId, tx)
-    } else if ((body == settings.sname + "rules") || (body == settings.rname + "rules")) {
-      let tx = "```Term And Condition:```\n"
-      tx += "```1. BOT Cepat / Lambat Respon tergantung cuaca.```\n"
-      tx += "```2. BOT TIDAK AKAN MERESPON NAMA USER KOSONG TANPA NAMA!!!```\n"
-      tx += "```3. Bot 24jam ON```\n"
-      tx += "```4. Bot memiliki deteksi spam!```\n"
-      tx += "    ```a. jika kamu spam sticker/image/video, maka kamu akan dikick oleh bot.```\n"
-      tx += "    ```b. jika kamu spam commands, maka kamu akan di diamkan oleh bot selama 15 menit.```\n"
-      tx += "    ```c. jika kamu spam chat, maka kamu akan diblock oleh bot.```\n"
-      tx += "    ```d. jika kamu TELEPON bot, maka kamu akan diblokir oleh bot, dan tidak bisa diunblok.```\n"
-      tx += "```5. Bot memiliki batasan perintah!```\n"
-      tx += "    *• setiap user memiliki jumlah limit yang sama, " + settings.limitCount + " limit penggunaan setiap hari dan akan direset setelah jam 21.00*\n"
-      tx += "    *• setiap user premium memiliki jumlah limit " + settings.limitCountPrem + " penggunaan setiap hari dan akan direset setelah jam 21.00*\n"
-      tx += "    *• setiap user vip memiliki jumlah limit infinity(nolimit) penggunaan setiap hari*\n"
-      tx += "```6. GUNAKAN BOT DENGAN BIJAK!```\n"
-      tx += "    _bot mempunyai akses premium dan non premium dan mempunyai perintah khusus premium user_\n"
-      tx += "        *a. jika kamu adalah termasuk user premium, maka limit kreditmu berkurang 1 setiap command*\n"
-      tx += "        *b. jika kamu non user premium dan kamu gunain akses premium, maka limit kreditmu bakalan langsung habis*\n"
-      tx += "        *c. jadi, untuk kamu yang non premium, tahu diri ya, gunakan fitur yang sesuai dengan statusmu, masih bisa trial kok, tapi dengan catatan, limit kamu bakalan langsung habis setelah itu. RESET OTOMATIS JAM 9 MALAM SETIAP HARI*"
-      sendReply(toId, tx)
-    } else if ((body == settings.sname + "order") || (body == settings.rname + "order")) {
-      let tx = 'kamu mau order bot?\n'
-      tx += 'boleh banget kak! ini kak pricelistnya!\n\n'
-      tx += '1. bawa pulang bot ke grupmu\n'
-      tx += '   a. biaya 1x masuk grup, bayar 20k perbulan\n'
-      tx += '      - kalo bot sudah masuk kegrupmu dan kemudian dikick / dikeluarin, maka hangus.\n'
-      tx += '      - bot bisa ganti grup dengan catatan, konfirmasi ke creator dulu.\n'
-      tx += '2. limit kamu habis?\n'
-      tx += '   a. user premium, 20k perbulan\n'
-      tx += '   b. user vip, 75k perbulan\n'
-      tx += '   silakan ketik .vip atau .premium untuk info\n'
-      tx += '3. mau akunmu jadi bot? (clone ' + BotName + ')\n'
-      tx += '   a. jadi owner aja, 250k perbulan\n'
-      tx += '      - bebas mau masukin bot ke berapapun grupnya\n'
-      tx += '      - unlimited limit dan bisa gift limit kesiapapun\n'
-      tx += '      - bisa settings limit sendiri\n'
-      tx += '      - full fitur dari ' + BotName + '\n'
-      tx += '      - bisa ganti nama sendiri\n'
-      tx += '      - dll.\n'
-      tx += '4. mau akunmu jadi selfbot?\n'
-      tx += '   a. bisa update story via commands\n'
-      tx += '      - update story video\n'
-      tx += '      - update story text (background item)\n'
-      tx += '      - update story image\n'
-      tx += '   b. ada game nya juga loh!\n'
-      tx += '      - game casino\n'
-      tx += '      - game samgong\n'
-      tx += '   c. bisa jadi self-public bot juga\n'
-      tx += '      - akunmu bisa jadi bot untuk diri kamu sendiri, dan juga bisa dipakai orang lain juga.\n'
-      tx += '      - unlimited limit tentunya\n'
-      tx += '   d. HAMPIR SEMUA FITUR FNBOTS ADA DI SELFBOT JUGA!\n'
-      tx += 'minat? chat langsung creator/owner'
-      const targ = admin
-      const vcard = 'BEGIN:VCARD\n' +
-        'VERSION:3.0\n' +
-        'FN:Creator\n' +
-        'ORG:FNBOTS\n' +
-        'TEL;type=CELL;type=VOICE;waid=' + targ.split("@s.whatsapp.net")[0] + ':+' + targ.split("@s.whatsapp.net")[0] + '\n' +
-        'END:VCARD'
-      await sendReply(toId, tx)
-      client.sendMessage(toId, {
-        displayname: "",
-        vcard: vcard
-      }, MessageType.contact)
-    } else if ((body == settings.sname + "stay") || (body == settings.rname + "stay")) {
-      let tx = 'kamu mau bikin botnya stay di group kamu?\n'
-      tx += 'Bisa kak. Cukup bantu creator dengan bayar 20k/bulan aja kak.\n'
-      tx += 'Nih chat langsung kontak yang dd kirim ya :D'
-      const targ = admin
-      const vcard = 'BEGIN:VCARD\n' +
-        'VERSION:3.0\n' +
-        'FN:Creator\n' +
-        'ORG:FNBOTS\n' +
-        'TEL;type=CELL;type=VOICE;waid=' + targ.split("@s.whatsapp.net")[0] + ':+' + targ.split("@s.whatsapp.net")[0] + '\n' +
-        'END:VCARD'
-      await sendReply(toId, tx)
-      client.sendMessage(toId, {
-        displayname: "",
-        vcard: vcard
-      }, MessageType.contact)
-    } else if ((body == settings.sname + "vip") || (body == settings.rname + "vip")) {
-      let tx = 'apa itu VIP?\n'
-      tx += 'VIP adalah upgrade dari PREMIUM\n'
-      tx += '1. akses premium\n'
-      tx += '2. unlimited limit\n'
-      tx += '3. bisa gift limit ke user lain\n'
-      tx += '4. jika di grup ketemu ' + BotName + ' dan kebetulan ' + BotName + ' jadi admin grup tersebut, kamu bisa promote diri kamu jadi admin juga!\n'
-      tx += 'kenapa gak jadi VIP aja dengan segala keuntungan? cuman seharga 75k/bulan kok. :D\n'
-      sendReply(toId, tx)
+      client.sendImageMessage(toId, a, `./media/fotobot.jpeg`)
+      client.sendContact(toId, "FNBOTS", "6285712453005")
     }
-
+    const sticker = messageContent.includes('stickerMessage')
+    const image = messageContent.includes('imageMessage')
+    const video = messageContent.includes('videoMessage')
+    const audio = messageContent.includes('audioMessage')
     if (xd.filter.includes(isGroup)) {
       if (sticker) {
         if (m.key.fromMe === false) {
@@ -4074,17 +3942,17 @@ async function fnbots(client, messages, asu) {
               if (stickerspam.has(serial) && !(stp.has(serial))) {
                 stp.add(serial);
                 if (isSadmin) {
-                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
+                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', null)
                 } else if (master) {
-                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
+                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', null)
                 } else if (vip) {
-                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', null)
                 } else if (premium) {
-                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', null)
                 } else if (isGroupAdmins) {
-                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
+                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', null)
                 } else {
-                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
+                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', null)
                   setTimeout(() => {
                     if (x8.mutelist.includes(serial) == false) {
                       x8.mutelist.push(serial)
@@ -4116,17 +3984,17 @@ async function fnbots(client, messages, asu) {
               if (stickerspam.has(serial) && !(stp.has(serial))) {
                 stp.add(serial);
                 if (isSadmin) {
-                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
+                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', null)
                 } else if (master) {
-                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
+                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', null)
                 } else if (vip) {
-                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', null)
                 } else if (premium) {
-                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', null)
                 } else if (isGroupAdmins) {
-                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
+                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', null)
                 } else {
-                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
+                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', null)
                   setTimeout(() => {
                     if (x8.mutelist.includes(serial) == false) {
                       x8.mutelist.push(serial)
@@ -4158,17 +4026,17 @@ async function fnbots(client, messages, asu) {
               if (stickerspam.has(serial) && !(stp.has(serial))) {
                 stp.add(serial);
                 if (isSadmin) {
-                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
+                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', null)
                 } else if (master) {
-                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
+                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', null)
                 } else if (vip) {
-                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', null)
                 } else if (premium) {
-                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', null)
                 } else if (isGroupAdmins) {
-                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
+                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', null)
                 } else {
-                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
+                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', null)
                   setTimeout(() => {
                     if (x8.mutelist.includes(serial) == false) {
                       x8.mutelist.push(serial)
@@ -4200,17 +4068,17 @@ async function fnbots(client, messages, asu) {
               if (stickerspam.has(serial) && !(stp.has(serial))) {
                 stp.add(serial);
                 if (isSadmin) {
-                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', [serial])
+                  client.sendTextWithMentions(toId, 'creatorku yang ganteng @' + serial.replace('@c.whatsapp.net', '') + '\ngaboleh spam ya...', null)
                 } else if (master) {
-                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', [serial])
+                  client.sendTextWithMentions(toId, 'wah ini nih! @' + serial.replace('@c.whatsapp.net', '') + '\nHei Owner, jangan ngajarin membernya buat spam! 🤦‍♂️🤦‍♂️😤🧐', null)
                 } else if (vip) {
-                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'hmmmmm gitu ya @' + serial.replace('@c.whatsapp.net', '') + '\nvip bebas spam. 😒🙃😏', null)
                 } else if (premium) {
-                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', [serial])
+                  client.sendTextWithMentions(toId, 'wadooooh si @' + serial.replace('@c.whatsapp.net', '') + '\nasik nih premium bisa spam. 😒🙃😏', null)
                 } else if (isGroupAdmins) {
-                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', [serial])
+                  client.sendTextWithMentions(toId, 'yaela @' + serial.replace('@c.whatsapp.net', '') + '\njangan mentang-mentang jadi admin spam terus terusan ya!', null)
                 } else {
-                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', [serial])
+                  client.sendTextWithMentions(toId, 'member bangsat ya @' + serial.replace('@c.whatsapp.net', '') + '\nspam anjeng! 😡😡😡😡', null)
                   setTimeout(() => {
                     if (x8.mutelist.includes(serial) == false) {
                       x8.mutelist.push(serial)
@@ -4299,55 +4167,41 @@ async function fnbots(client, messages, asu) {
           if (isSadmin) {
             ctype = "master"
             if (getComs(txt, 'addwhitelist')) {
-              if (isWhite(toId)) return sendReply(toId, 'Sudah ada di whitelist')
+              if (isWhite(toId)) return client.sendReply(toId, 'Sudah ada di whitelist', m)
               settings.whitelist.push(toId)
               dumpSet()
-              sendText(toId, 'Success!')
+              client.sendText(toId, 'Success!')
             } else if (getComs(txt, 'delwhitelist')) {
-              if (!(isWhite(toId))) return sendReply(toId, 'tidak ada di whitelist')
+              if (!(isWhite(toId))) return client.sendReply(toId, 'tidak ada di whitelist', m)
               let index = settings.whitelist.indexOf(toId);
               settings.whitelist.splice(index, 1)
               dumpSet()
-              sendText(toId, 'Success!')
+              client.sendText(toId, 'Success!')
             } else if (getComs(txt, 'maintenance on')) {
               if (!isSadmin) return
               if (mtcState === true) return
               settings.mtc = true
               dumpSet()
-              sendReply(toId, 'Maintenance sudah di Umumkan!')
+              client.sendReply(toId, 'Maintenance sudah di Umumkan!', m)
             } else if (getComs(txt, 'maintenance off')) {
               if (!isSadmin) return
               if (mtcState === false) return
               settings.mtc = false
               dumpSet()
-              sendReply(toId, 'Maintenance sudah di Umumkan!')
+              client.sendReply(toId, 'Maintenance sudah di Umumkan!', m)
             } else if (getComs(txt, "clearcache")) {
               var dsa = new os_exec()
               dsa.execCommand("rm -rf ./media");
               await sleep(1000)
               dsa.execCommand("cp -R ./xc ./media");
               await sleep(1000)
-              sendText(toId, "membersihkan sampah....")
+              client.sendText(toId, "membersihkan sampah....")
             } else if (getPrefix(txt, "upcoms")) {
               let cui = txt.split(" ");
               let w1 = cui[1].trim();
               let w2 = cui[2].trim();
               upComs(w1, w2);
-              sendReply(toId, "command updated")
-            } else if (getPrefix(txt, "spam")) {
-              let cui = body.split("spam" + " ");
-              let w1 = cui[1]
-              let sp = w1.split(" ")
-              let num = sp[0].trim()
-              let ca = w1.replace(num + " ", "")
-              for (let i = 0; i < num; i++) {
-                if (ca.includes('@')) {
-                  mentioned = m.message.extendedTextMessage.contextInfo.mentionedJid
-                  client.sendTextWithMentions(toId, ca, mentioned)
-                } else {
-                  sendText(toId, ca)
-                }
-              }
+              client.sendReply(toId, "command updated", m)
             } else if (getComs(txt, 'allcommands')) {
               let ts = "*## " + BotName + " ##*\n"
               let no = 1;
@@ -4387,7 +4241,7 @@ async function fnbots(client, messages, asu) {
                 no += 1;
               })
               ts += "\n\nRegards: *PEKI - VH - FN*"
-              sendText(toId, ts)
+              client.sendText(toId, ts)
             } else if (getPrefix(txt, 'resetin limit')) {
               const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
               const b = mentionedJidList
@@ -4398,7 +4252,7 @@ async function fnbots(client, messages, asu) {
                   dumpLimit()
                 }
               }
-              sendText(toId, 'sukses reset limitnya bos')
+              client.sendText(toId, 'sukses reset limitnya bos')
             } else if (getPrefix(txt, 'ubah')) {
               if (isQuotedMsg) {
                 const a = arg
@@ -4438,7 +4292,7 @@ async function fnbots(client, messages, asu) {
                   let x = fs.readFileSync('./database/' + add + '.webp')
                   x6.sticker[add] = x
                   dumpsticker()
-                  sendText(toId, "sticker added.")
+                  client.sendText(toId, "sticker added.")
                 })
               } else if (isMedia && !m.message.videoMessage || isQuotedImage) {
                 const decryptMedia = isQuotedImage ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
@@ -4451,22 +4305,22 @@ async function fnbots(client, messages, asu) {
                   let x = fs.readFileSync('./database/' + add + '.webp')
                   x6.sticker[add] = x
                   dumpsticker()
-                  sendText(toId, "sticker added.")
+                  client.sendText(toId, "sticker added.")
                 });
               } else {
-                sendReply(toId, 'hanya bisa menyimpan gambar & video!')
+                client.sendReply(toId, 'hanya bisa menyimpan gambar & video!', m)
               }
             } else if (getPrefix(txt, "delsticker")) {
               let alt = arg
               if (x6.sticker.hasOwnProperty(alt)) {
                 delete x6.sticker[alt]
                 dumpsticker()
-                sendText(toId, "sticker deleted.")
+                client.sendText(toId, "sticker deleted.")
               } else {
-                sendText(toId, "tidak ada didalam database bot.")
+                client.sendText(toId, "tidak ada didalam database bot.")
               }
             } else if (getPrefix(txt, 'addaudio')) {
-              if (!isQuotedMsg) sendReply(toId, 'Maaf, perintah harus mereply target!')
+              if (!isQuotedMsg) client.sendReply(toId, 'Maaf, perintah harus mereply target!', m)
               if (isQuotedAudio) {
                 const add = arg
                 const filename = `./database/${add}.${mime.extension(m.message.extendedTextMessage.contextInfo.quotedMessage.audioMessage.mimetype)}`;
@@ -4479,18 +4333,18 @@ async function fnbots(client, messages, asu) {
                 })
                 x2.video[add] = filename
                 dumpVideo()
-                sendText(toId, "audio added.")
+                client.sendText(toId, "audio added.")
               } else {
-                sendReply(toId, 'hanya bisa reply!')
+                client.sendReply(toId, 'hanya bisa reply!', m)
               }
             } else if (getPrefix(txt, "delaudio")) {
               let alt = arg
               if (x2.video.hasOwnProperty(alt)) {
                 delete x2.video[alt]
                 dumpVideo()
-                sendText(toId, "audio deleted.")
+                client.sendText(toId, "audio deleted.")
               } else {
-                sendText(toId, "tidak ada didalam database bot.")
+                client.sendText(toId, "tidak ada didalam database bot.")
               }
             } else if (getComs(txt, 'deleteall')) {
               const a = await client.chats.all()
@@ -4498,39 +4352,39 @@ async function fnbots(client, messages, asu) {
               for (let x of a) {
                 await client.deleteChat(x.jid)
               }
-              sendReply(toId, 'Succes delete all chat!')
+              client.sendReply(toId, 'Succes delete all chat!', m)
             } else if (getPrefix(txt, 'x')) {
               if (isQuotedMessage) {
                 if (args[0] === 'apa') {
                   const asu = m.message.extendedTextMessage.contextInfo.quotedMessage.extendedTextMessage.text
                   xb.kataapa.push(asu)
                   dumpKata()
-                  sendReply(toId, "tersimpan didalam database")
+                  client.sendReply(toId, "tersimpan didalam database", m)
                 } else if (args[0] === 'dimana') {
                   const asu = m.message.extendedTextMessage.contextInfo.quotedMessage.extendedTextMessage.text
                   xb.katadimana.push(asu)
                   dumpKata()
-                  sendReply(toId, "tersimpan didalam database")
+                  client.sendReply(toId, "tersimpan didalam database", m)
                 } else if (args[0] === 'kapan') {
                   const asu = m.message.extendedTextMessage.contextInfo.quotedMessage.extendedTextMessage.text
                   xb.katakapan.push(asu)
                   dumpKata()
-                  sendReply(toId, "tersimpan didalam database")
+                  client.sendReply(toId, "tersimpan didalam database", m)
                 } else if (args[0] === 'siapa') {
                   const asu = m.message.extendedTextMessage.contextInfo.quotedMessage.extendedTextMessage.text
                   xb.katasiapa.push(asu)
                   dumpKata()
-                  sendReply(toId, "tersimpan didalam database")
+                  client.sendReply(toId, "tersimpan didalam database", m)
                 } else if (args[0] === 'kenapa') {
                   const asu = m.message.extendedTextMessage.contextInfo.quotedMessage.extendedTextMessage.text
                   xb.katakenapa.push(asu)
                   dumpKata()
-                  sendReply(toId, "tersimpan didalam database")
+                  client.sendReply(toId, "tersimpan didalam database", m)
                 } else if (args[0] === 'gimana') {
                   const asu = m.message.extendedTextMessage.contextInfo.quotedMessage.extendedTextMessage.text
                   xb.katabagaimana.push(asu)
                   dumpKata()
-                  sendReply(toId, "tersimpan didalam database")
+                  client.sendReply(toId, "tersimpan didalam database", m)
                 }
               }
             } else if (getPrefix(txt, 'nbc')) {
@@ -4544,9 +4398,9 @@ async function fnbots(client, messages, asu) {
               }
               let arrOfGroups = arrOfGroup.filter(x => !isWhite(x))
               for (let groupId of arrOfGroups) {
-                await sendText(groupId, `${msg}`)
+                await client.sendText(groupId, `${msg}`)
               }
-              sendText(toId, 'Broadcast Success!')
+              client.sendText(toId, 'Broadcast Success!')
             } else if (getPrefix(txt, 'wbc')) {
               let msg = arg
               let groups = await client.chats.all()
@@ -4560,7 +4414,7 @@ async function fnbots(client, messages, asu) {
               for (let groupId of arrOfGroups) {
                 await sendImage(groupId, `./media/fotobot.jpeg`, `${BotName} Broadcast\n\n${msg}`)
               }
-              sendText(toId, 'Broadcast Success!')
+              client.sendText(toId, 'Broadcast Success!')
             }
             if (getComs(txt, "listbot")) {
               const udud = settings.premium
@@ -4570,14 +4424,14 @@ async function fnbots(client, messages, asu) {
                 anu += "\n{0}. @{1}".format(nom, i.replace('@s.whatsapp.net', ''))
                 nom += 1
               }
-              client.sendTextWithMentions(toId, anu, udud).catch((err) => sendText(toId, 'kosong'))
+              client.sendTextWithMentions(toId, anu, udud).catch((err) => client.sendText(toId, 'kosong'))
             } else if (getPrefix(txt, 'addbot')) {
               if (isQuotedMsg) {
                 if (!settings.premium.includes(m.message.extendedTextMessage.contextInfo.participant)) {
                   settings.premium.push(m.message.extendedTextMessage.contextInfo.participant)
                   dumpSet()
                 } else {
-                  sendReply(toId, 'Sudah ada di list')
+                  client.sendReply(toId, 'Sudah ada di list', m)
                 }
               } else {
                 try {
@@ -4588,7 +4442,7 @@ async function fnbots(client, messages, asu) {
                         settings.premium.push(men)
                         dumpSet()
                       } else {
-                        sendReply(toId, 'Sudah ada di list')
+                        client.sendReply(toId, 'Sudah ada di list', m)
                       }
                     }
                   }
@@ -4598,11 +4452,11 @@ async function fnbots(client, messages, asu) {
                     settings.premium.push(pea)
                     dumpSet()
                   } else {
-                    sendReply(toId, 'Sudah ada di list')
+                    client.sendReply(toId, 'Sudah ada di list', m)
                   }
                 }
               }
-              sendReply(toId, "User promoted as bot.")
+              client.sendReply(toId, "User promoted as bot.", m)
             } else if (getPrefix(txt, 'delbot')) {
               let stt = body.split("delbot ")
               if (stt.length > 1) {
@@ -4630,7 +4484,7 @@ async function fnbots(client, messages, asu) {
             } else if (getComs(txt, "resetbot")) {
               settings.premium = []
               dumpSet()
-              sendText(toId, "bot list reseted.")
+              client.sendText(toId, "bot list reseted.")
             }
             if (getComs(txt, 'listowner')) {
               const udud = InitUser.master
@@ -4648,7 +4502,7 @@ async function fnbots(client, messages, asu) {
                   InitUser.master.push(m.message.extendedTextMessage.contextInfo.participant)
                   dumpMaster()
                 } else {
-                  sendReply(toId, 'Sudah ada di list')
+                  client.sendReply(toId, 'Sudah ada di list', m)
                 }
               } else {
                 try {
@@ -4659,7 +4513,7 @@ async function fnbots(client, messages, asu) {
                         InitUser.master.push(men)
                         dumpMaster()
                       } else {
-                        sendReply(toId, 'Sudah ada di list')
+                        client.sendReply(toId, 'Sudah ada di list', m)
                       }
                     }
                   }
@@ -4669,11 +4523,11 @@ async function fnbots(client, messages, asu) {
                     InitUser.master.push(pea)
                     dumpMaster()
                   } else {
-                    sendReply(toId, 'Sudah ada di list')
+                    client.sendReply(toId, 'Sudah ada di list', m)
                   }
                 }
               }
-              sendReply(toId, "User promoted as owner.")
+              client.sendReply(toId, "User promoted as owner.", m)
             } else if (getPrefix(txt, 'delowner')) {
               let stt = body.split("delowner ")
               if (stt.length > 1) {
@@ -4701,7 +4555,7 @@ async function fnbots(client, messages, asu) {
             } else if (getComs(txt, "resetowner")) {
               InitUser.master = []
               dumpMaster()
-              sendText(toId, "owner list reseted.")
+              client.sendText(toId, "owner list reseted.")
             }
           }
           if (isMuted(toId) && !mtcState && banChat() && !isBanned || isSadmin || master || vip || premium || (isWhiteList(toId) && !isBanned)) {
@@ -4709,34 +4563,34 @@ async function fnbots(client, messages, asu) {
               ctype = "owner"
               if (getComs(txt, "speed")) {
                 var t0 = Date.now() / 1000;
-                await sendText(toId, "Performance test");
+                await client.sendText(toId, "Performance test");
                 var t1 = Date.now() / 1000;
                 var spd = Math.round((t1 - t0) * 1000);
-                sendText(toId, `Send time: ${spd / 100000} _sec._`);
+                client.sendText(toId, `Send time: ${spd / 100000} _sec._`);
               } else if (getComs(txt, 'banchat on')) {
                 if (settings.banChats === true) return
                 settings.banChats = true
                 banChats = true
                 dumpSet()
-                sendReply(toId, 'Global chat has been disabled!')
+                client.sendReply(toId, 'Global chat has been disabled!', m)
               } else if (getComs(txt, 'banchat off')) {
                 if (settings.banChats === false) return
                 settings.banChats = false
                 banChats = false
                 dumpSet()
-                sendReply(toId, 'Global chat has been enabled!')
+                client.sendReply(toId, 'Global chat has been enabled!', m)
               } else if (getComs(txt, 'autojoin on')) {
                 if (settings.autojoin === true) return
                 settings.autojoin = true
                 dumpSet()
-                sendReply(toId, 'autojoin link group has been enabled!')
+                client.sendReply(toId, 'autojoin link group has been enabled!', m)
               } else if (getComs(txt, 'autojoin off')) {
                 if (settings.autojoin === false) return
                 settings.autojoin = false
                 dumpSet()
-                sendReply(toId, 'autojoin tidak aktif')
+                client.sendReply(toId, 'autojoin tidak aktif', m)
               } else if (getComs(txt, 'stats')) {
-                await sendReply(toId, 'Sedang mengakumulasikan data...')
+                await client.sendReply(toId, 'Sedang mengakumulasikan data...', m)
                 let allchats = await client.chats.all()
                 let groups = []
                 let chatIds = []
@@ -4761,76 +4615,76 @@ async function fnbots(client, messages, asu) {
                 text += `- *${k.length + 43253}* Total User\n`
                 text += `- *${settings.totalhitcount}* Total Perintah Dijalankan\n`
                 text += `- *${kem.length}* Total pengguna hari ini\n`
-                await sendReply(toId, text)
+                await client.sendReply(toId, text, m)
               } else if (getComs(txt, 'runtime')) {
                 let tms = (Date.now() / 1000) - (timeStart);
                 let cts = waktu(tms);
-                sendReply(toId, cts)
+                client.sendReply(toId, cts, m)
               } else if (getPrefix(txt, "upname")) {
                 const cui = arg
                 await client.updateProfileName(cui)
-                sendReply(toId, "Name set: {0}".format(cui))
+                client.sendReply(toId, "Name set: {0}".format(cui), m)
               } else if (getPrefix(txt, "upstatus")) {
                 const w1 = arg
                 await client.setStatus(w1)
-                sendReply(toId, "Status set: {0}".format(w1))
+                client.sendReply(toId, "Status set: {0}".format(w1), m)
               } else if (getComs(txt, 'setprofilepic')) {
                 if (isMedia && !m.message.videoMessage || isQuotedImage) {
                   const decryptMedia = isQuotedImage ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
                   const stiker = await client.downloadAndSaveMediaMessage(decryptMedia)
-                  await client.updateProfilePicture(botNumber, stiker).then(() => sendText(toId, "success update profile picture"))
+                  await client.updateProfilePicture(botNumber, stiker).then(() => client.sendText(toId, "success update profile picture"))
                 }
               } else if (getPrefix(txt, "upapikey1")) {
                 const cui = args[0]
                 settings.vhkey = cui;
                 dumpSet();
-                sendReply(toId, "apikey vhtear changed to: {0}".format(cui))
+                client.sendReply(toId, "apikey vhtear changed to: {0}".format(cui), m)
               } else if (getPrefix(txt, "upapikey2")) {
                 const cui = args[0]
                 settings.itechkey = cui;
                 dumpSet();
-                sendReply(toId, "apikey itech changed to: {0}".format(cui))
+                client.sendReply(toId, "apikey itech changed to: {0}".format(cui), m)
               } else if (getPrefix(txt, "upsnobg")) {
                 const cui = args[0]
                 settings.nobg = cui;
                 dumpSet();
-                sendReply(toId, "apikey itech changed to: {0}".format(cui))
+                client.sendReply(toId, "apikey itech changed to: {0}".format(cui), m)
               } else if (getPrefix(txt, "upbotname")) {
                 const cui = args[0]
                 settings.botname = cui;
                 dumpSet();
-                sendReply(toId, "the bot name changed to: {0}".format(cui))
+                client.sendReply(toId, "the bot name changed to: {0}".format(cui), m)
               } else if (getPrefix(txt, "upowncon")) {
                 const cui = args[0]
                 const cua = args[1]
                 settings.admin = cui;
                 dumpSet();
-                await sendReply(toId, "the bot owner changed to: {0}".format(cui))
+                await client.sendReply(toId, "the bot owner changed to: {0}".format(cui), m)
                 await sendContact(toId, cui, cua)
               } else if (getPrefix(txt, "upconsnobg")) {
                 const cui = args[0]
                 const cua = args[1]
                 settings.snobg = cui;
                 dumpSet();
-                await sendReply(toId, "the bot owner changed to: {0}".format(cui))
+                await client.sendReply(toId, "the bot owner changed to: {0}".format(cui), m)
                 await sendContact(toId, cui, cua)
               } else if (getPrefix(txt, "uptext")) {
                 const cui = arg
                 settings.autocommand = cui;
                 dumpSet();
-                sendReply(toId, "success changed to: {0}".format(cui))
+                client.sendReply(toId, "success changed to: {0}".format(cui), m)
               } else if (getPrefix(txt, "upsname")) {
                 let cui = txt.split(" ");
                 let w1 = cui[1].trim();
                 settings.sname = w1;
                 dumpSet();
-                sendReply(toId, "squad name set: {0}".format(w1))
+                client.sendReply(toId, "squad name set: {0}".format(w1), m)
               } else if (getPrefix(txt, "uprname")) {
                 let cui = txt.split(" ");
                 let w1 = cui[1].trim();
                 settings.rname = w1;
                 dumpSet();
-                sendReply(toId, "response name set: {0}".format(w1))
+                client.sendReply(toId, "response name set: {0}".format(w1), m)
               } else if (getPrefix(txt, "suggest")) {
                 let cui = txt.split(" ");
                 let w1 = cui[1].trim();
@@ -4842,7 +4696,7 @@ async function fnbots(client, messages, asu) {
                   settings.autocorrect = 0
                 }
                 dumpSet();
-                sendReply(toId, "Word suggestion {0}".format(w1))
+                client.sendReply(toId, "Word suggestion {0}".format(w1), m)
               } else if (getPrefix(txt, "chatbot")) {
                 let cui = txt.split(" ");
                 let w1 = cui[1].trim();
@@ -4852,7 +4706,7 @@ async function fnbots(client, messages, asu) {
                   settings.chatbot = false
                 }
                 dumpSet();
-                sendReply(toId, "Chatbot switched to: {0}".format(w1))
+                client.sendReply(toId, "Chatbot switched to: {0}".format(w1), m)
               } else if (getComs(txt, "mygroup")) {
                 const udud = await client.chats.all()
                 let groups = []
@@ -4870,12 +4724,12 @@ async function fnbots(client, messages, asu) {
                   anu += "\n" + nom + ". " + name + "\n    ID: " + i + "\n"
                   nom += 1
                 }
-                sendReply(toId, anu)
+                client.sendReply(toId, anu, m)
               } else if (getPrefix(txt, 'changememberlimit')) {
                 const pesan = args[0]
                 settings.memberLimit = parseInt(pesan)
                 dumpSet()
-                await sendReply(toId, `sukses merubah limit menjadi ${pesan}`)
+                await client.sendReply(toId, `sukses merubah limit menjadi ${pesan}`, m)
                 var xsa = new os_spawn();
                 xsa.execCommand(pukimak).catch(err => {
                   console.log("os >>>", err);
@@ -4884,7 +4738,7 @@ async function fnbots(client, messages, asu) {
                 const pesan = args[0]
                 settings.groupLimit = parseInt(pesan)
                 dumpSet()
-                await sendReply(toId, `sukses merubah limit menjadi ${pesan}`)
+                await client.sendReply(toId, `sukses merubah limit menjadi ${pesan}`, m)
                 var xsa = new os_spawn();
                 xsa.execCommand(pukimak).catch(err => {
                   console.log("os >>>", err);
@@ -4893,7 +4747,7 @@ async function fnbots(client, messages, asu) {
                 const pesan = args[0]
                 settings.limitCountPrem = parseInt(pesan)
                 dumpSet()
-                await sendReply(toId, `sukses merubah limit menjadi ${pesan}`)
+                await client.sendReply(toId, `sukses merubah limit menjadi ${pesan}`, m)
                 var xsa = new os_spawn();
                 xsa.execCommand(pukimak).catch(err => {
                   console.log("os >>>", err);
@@ -4902,7 +4756,7 @@ async function fnbots(client, messages, asu) {
                 const pesan = args[0]
                 settings.limitCount = parseInt(pesan)
                 dumpSet()
-                await sendReply(toId, `sukses merubah limit menjadi ${pesan}`)
+                await client.sendReply(toId, `sukses merubah limit menjadi ${pesan}`, m)
                 var xsa = new os_spawn();
                 xsa.execCommand(pukimak).catch(err => {
                   console.log("os >>>", err);
@@ -4918,7 +4772,7 @@ async function fnbots(client, messages, asu) {
                 }
                 x4.limit = meki
                 xi.limitgame = meki
-                await sendReply(toId, 'sukses')
+                await client.sendReply(toId, 'sukses', m)
                 await dumpLimitGame()
                 await dumpLimit()
                 await sleep(1000)
@@ -4961,7 +4815,7 @@ async function fnbots(client, messages, asu) {
                     }
                   }
                 }
-                sendReply(toId, 'sukses reset limitnya bos')
+                client.sendReply(toId, 'sukses reset limitnya bos', m)
               }
               if (getPrefix(txt, 'premium')) {
                 if (ar[0] === 'add') {
@@ -4986,14 +4840,14 @@ async function fnbots(client, messages, asu) {
                       fs.writeJSONSync('db/' + pukimaki + '.premium.json', xa, {
                         spaces: 2
                       })
-                      await sendReply(toId, `Done deleted from premium user....`)
+                      await client.sendReply(toId, `Done deleted from premium user....`, m)
                     }
                   } catch (err) {
                     xa.splice(getPremiumPosition(args[1] + '@s.whatsapp.net', xa), 1)
                     fs.writeJSONSync('db/' + pukimaki + '.premium.json', xa, {
                       spaces: 2
                     })
-                    await sendReply(toId, `Done deleted from premium user....`)
+                    await client.sendReply(toId, `Done deleted from premium user....`, m)
                   }
                 } else if (ar[0] === 'list') {
                   let ts = "*## " + BotName + " Premium ##*\n"
@@ -5008,7 +4862,7 @@ async function fnbots(client, messages, asu) {
                   ts += "\nRegards: *" + BotName + "*"
                   sendReplyWithMentions(toId, ts, s, m)
                 } else {
-                  await reply(`Error!`)
+                  await client.sendReply(toId, `Error!`, m)
                 }
               }
               if (getPrefix(txt, 'vip')) {
@@ -5034,14 +4888,14 @@ async function fnbots(client, messages, asu) {
                       fs.writeJSONSync('db/' + pukimaki + '.premium.json', xc, {
                         spaces: 2
                       })
-                      await sendReply(toId, `Done deleted from vip user....`)
+                      await client.sendReply(toId, `Done deleted from vip user....`, m)
                     }
                   } catch (err) {
                     xa.splice(getVIPposition(args[1] + '@s.whatsapp.net', xc), 1)
                     fs.writeJSONSync('db/' + pukimaki + '.premium.json', xc, {
                       spaces: 2
                     })
-                    await sendReply(toId, `Done deleted from vip user....`)
+                    await client.sendReply(toId, `Done deleted from vip user....`, m)
                   }
                 } else if (ar[0] === 'list') {
                   let ts = "*## " + BotName + " Premium ##*\n"
@@ -5056,7 +4910,7 @@ async function fnbots(client, messages, asu) {
                   ts += "\nRegards: *" + BotName + "*"
                   sendReplyWithMentions(toId, ts, s, m)
                 } else {
-                  await reply(`Error!`)
+                  await client.sendReply(toId, 'Error!', m)
                 }
               }
               if (getComs(txt, 'lwhite')) {
@@ -5073,7 +4927,7 @@ async function fnbots(client, messages, asu) {
                   no += 1;
                 }
                 ts += "\nRegards: *" + BotName + "*"
-                sendReply(toId, ts)
+                client.sendReply(toId, ts, m)
               } else if (getPrefix(txt, 'dwhite')) {
                 if (isQuotedMsg) {
                   const men = m.message.extendedTextMessage.contextInfo.quotedMessage.conversation
@@ -5083,9 +4937,9 @@ async function fnbots(client, messages, asu) {
                     settings.whitelist.splice(index, 1)
                     dumpSet()
                     dumpWhite()
-                    reply("user deleted.")
+                    client.sendReply(toId, "user deleted.", m)
                   } else {
-                    reply("tidak ada didalam list")
+                    client.sendReply(toId, "tidak ada didalam list", m)
                   }
                 } else {
                   const men = args[0]
@@ -5095,9 +4949,9 @@ async function fnbots(client, messages, asu) {
                     settings.whitelist.splice(index, 1)
                     dumpSet()
                     dumpWhite()
-                    reply("user deleted.")
+                    client.sendReply(toId, "user deleted.", m)
                   } else {
-                    reply("tidak ada didalam list")
+                    client.sendReply(toId, "tidak ada didalam list", m)
                   }
                 }
               }
@@ -5115,7 +4969,7 @@ async function fnbots(client, messages, asu) {
                 for (let i = 0; i < blocked.length; i++) {
                   await client.blockUser(blocked[i], "remove")
                 }
-                sendReply(toId, 'done unblock all shitlist')
+                client.sendReply(toId, 'done unblock all shitlist', m)
               }
               if (getComs(txt, 'listadmin')) {
                 const udud = groupAdmins
@@ -5126,7 +4980,7 @@ async function fnbots(client, messages, asu) {
                   anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                   nom += 1
                 }
-                client.sendTextWithMentions(toId, anu, udud)
+                client.sendTextWithMentions(toId, anu, null)
               }
               if (getComs(txt, "listmute")) {
                 const udud = x8.mutelist
@@ -5137,7 +4991,7 @@ async function fnbots(client, messages, asu) {
                   anu += "\n" + no + ". @" + udud[i].replace(/s.whatsapp.net/, "")
                   nom += 1
                 }
-                client.sendTextWithMentions(toId, anu, udud)
+                client.sendTextWithMentions(toId, anu, null)
               } else if (getPrefix(txt, 'delmute')) {
                 try {
                   const mentiones = m.message.extendedTextMessage.contextInfo.mentionedJid
@@ -5146,10 +5000,10 @@ async function fnbots(client, messages, asu) {
                       if (x8.mutelist.includes(men)) {
                         x8.mutelist = arrayRemove(x8.mutelist, men)
                       } else {
-                        sendReply(toId, 'tidak ada di list')
+                        client.sendReply(toId, 'tidak ada di list', m)
                       }
                     }
-                    sendReply(toId, "berhasil menghapus shitlist.")
+                    client.sendReply(toId, "berhasil menghapus shitlist.", m)
                     dumpMute()
                   }
                 } catch (err) {
@@ -5171,7 +5025,7 @@ async function fnbots(client, messages, asu) {
                         anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                         nom += 1
                       }
-                      await client.sendTextWithMentions(toId, anu, udud)
+                      await client.sendTextWithMentions(toId, anu, null)
                     }
                   }
                   dumpMute()
@@ -5200,7 +5054,7 @@ async function fnbots(client, messages, asu) {
                           dumpMute()
                         }
                       }
-                      sendReply(toId, "User added to mutelist")
+                      client.sendReply(toId, "User added to mutelist", m)
                     }
                   } catch (err) {
                     const pea = args[0]
@@ -5212,7 +5066,7 @@ async function fnbots(client, messages, asu) {
                       x8.muted.push(pea)
                       dumpMute()
                     }
-                    sendReply(toId, "User added to mutelist")
+                    client.sendReply(toId, "User added to mutelist", m)
                   }
                 }
               } else if (getPrefix(txt, 'unsilent')) {
@@ -5225,10 +5079,10 @@ async function fnbots(client, messages, asu) {
                       x8.muted.splice(index, 1)
                       dumpMute()
                     } else {
-                      sendReply(toId, 'tidak ada di list')
+                      client.sendReply(toId, 'tidak ada di list', m)
                     }
                   }
-                  sendReply(toId, "success.")
+                  client.sendReply(toId, "success.", m)
                 } else {
                   for (let men of mentiones) {
                     if (x8.mutelist.includes(men)) {
@@ -5237,15 +5091,15 @@ async function fnbots(client, messages, asu) {
                       x8.muted.splice(index, 1)
                       dumpMute()
                     } else {
-                      sendReply(toId, 'tidak ada di list')
+                      client.sendReply(toId, 'tidak ada di list', m)
                     }
                   }
-                  sendReply(toId, "success.")
+                  client.sendReply(toId, "success.", m)
                 }
               } else if (getComs(txt, "resetmute")) {
                 x8.mutelist = []
                 dumpMute()
-                sendReply(toId, "mutelist reseted.")
+                client.sendReply(toId, "mutelist reseted.", m)
               }
               if (getComs(txt, "listblack")) {
                 const udud = x8.muted
@@ -5257,7 +5111,7 @@ async function fnbots(client, messages, asu) {
                   anu += "\n{0}. {1} | {2}".format(nom, i, name)
                   nom += 1
                 }
-                sendReply(toId, anu)
+                client.sendReply(toId, anu, m)
               } else if (getPrefix(txt, 'delblack')) {
                 try {
                   const mentiones = m.message.extendedTextMessage.contextInfo.mentionedJid
@@ -5266,10 +5120,10 @@ async function fnbots(client, messages, asu) {
                       if (x8.muted.includes(men)) {
                         x8.muted = arrayRemove(x8.muted, men)
                       } else {
-                        sendReply(toId, 'tidak ada di list')
+                        client.sendReply(toId, 'tidak ada di list', m)
                       }
                     }
-                    sendReply(toId, "menghapus user muted.")
+                    client.sendReply(toId, "menghapus user muted.", m)
                   }
                   dumpMute()
                 } catch (err) {
@@ -5292,7 +5146,7 @@ async function fnbots(client, messages, asu) {
                         anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                         nom += 1
                       }
-                      client.sendTextWithMentions(toId, anu, udud)
+                      client.sendTextWithMentions(toId, anu, null)
                     }
                   }
                   dumpMute()
@@ -5309,20 +5163,20 @@ async function fnbots(client, messages, asu) {
                   anu += "\n{0}. {1}".format(nom, name)
                   nom += 1
                 }
-                reply(anu)
+                client.sendReply(toId, anu, m)
               } else if (getPrefix(txt, 'whitelistadd')) {
                 if (isQuotedMsg) {
                   const pea = m.message.extendedTextMessage.contextInfo.quotedMessage.conversation
-                  if (isWhite(pea)) return sendReply(toId, 'Sudah ada di whitelist')
+                  if (isWhite(pea)) return client.sendReply(toId, 'Sudah ada di whitelist', m)
                   settings.whitelist.push(pea)
                   dumpSet()
-                  sendReply(toId, 'Success!')
+                  client.sendReply(toId, 'Success!')
                 } else {
                   const pea = args[0]
-                  if (isWhite(pea)) return sendReply(toId, 'Sudah ada di whitelist')
+                  if (isWhite(pea)) return client.sendReply(toId, 'Sudah ada di whitelist', m)
                   settings.whitelist.push(pea)
                   dumpSet()
-                  sendReply(toId, 'Success!')
+                  client.sendReply(toId, 'Success!', m)
                 }
               } else if (getPrefix(txt, 'whitelistdel')) {
                 let stt = body.split("whitelistdel ")
@@ -5344,14 +5198,14 @@ async function fnbots(client, messages, asu) {
                       anu += "\n" + no + ". " + udud[i]
                       nom += 1
                     }
-                    await sendReply(toId, anu)
+                    await client.sendReply(toId, anu, m)
                     dumpSet()
                   }
                 }
               } else if (getComs(txt, "resetwhitelist")) {
                 settings.whitelist = []
                 dumpSet()
-                sendReply(toId, "whitelist reseted.")
+                client.sendReply(toId, "whitelist reseted.", m)
               }
               if (getComs(txt, "listmimic")) {
                 const udud = settings.memec
@@ -5362,14 +5216,14 @@ async function fnbots(client, messages, asu) {
                   anu += "\n{0}. @{1}".format(nom, i.replace('@s.whatsapp.net', ''))
                   nom += 1
                 }
-                client.sendTextWithMentions(toId, anu, udud)
+                client.sendTextWithMentions(toId, anu, null)
               } else if (getPrefix(txt, 'addmimic')) {
                 if (isQuotedMsg) {
                   if (!settings.memec.includes(quotedParticipant)) {
                     settings.memec.push(quotedParticipant)
                     dumpSet()
                   } else {
-                    sendReply(toId, 'Sudah ada di list')
+                    client.sendReply(toId, 'Sudah ada di list', m)
                   }
                 } else {
                   try {
@@ -5380,20 +5234,20 @@ async function fnbots(client, messages, asu) {
                           settings.memec.push(men)
                           dumpSet()
                         } else {
-                          sendReply(toId, 'Sudah ada di list')
+                          client.sendReply(toId, 'Sudah ada di list', m)
                         }
                       }
                     }
-                    sendReply(toId, "user add to mimic list")
+                    client.sendReply(toId, "user add to mimic list", m)
                   } catch (err) {
                     const pea = args[0]
                     if (!settings.memec.includes(pea)) {
                       settings.memec.push(pea)
                       dumpSet()
                     } else {
-                      sendReply(toId, 'Sudah ada di list')
+                      client.sendReply(toId, 'Sudah ada di list', m)
                     }
-                    sendReply(toId, "user add to mimic list")
+                    client.sendReply(toId, "user add to mimic list", m)
                   }
                 }
               } else if (getPrefix(txt, 'delmimic')) {
@@ -5416,22 +5270,22 @@ async function fnbots(client, messages, asu) {
                       anu += "\n" + no + ". @" + udud[i].replace(/@s.whatsapp.net/, "")
                       nom += 1
                     }
-                    await client.sendTextWithMentions(toId, anu, udud)
+                    await client.sendTextWithMentions(toId, anu, null)
                     dumpSet()
                   }
                 }
               } else if (getComs(txt, "resetmimic")) {
                 settings.memec = []
                 dumpSet()
-                sendReply(toId, "mimic list reseted.")
+                client.sendReply(toId, "mimic list reseted.", m)
               } else if (getComs(txt, 'mimic on')) {
                 if (mekimeki === true) return
                 mekimeki = true
-                sendReply(toId, 'mimic has been enabled!')
+                client.sendReply(toId, 'mimic has been enabled!', m)
               } else if (getComs(txt, 'mimic off')) {
                 if (mekimeki === false) return
                 mekimeki = false
-                sendReply(toId, 'mimic tidak aktif')
+                client.sendReply(toId, 'mimic tidak aktif', m)
               }
               if (getComs(txt, 'leaveall')) {
                 let allchats = await client.chats.all()
@@ -5444,7 +5298,7 @@ async function fnbots(client, messages, asu) {
                   await client.groupLeave(groupId)
                   await client.modifyChat(groupId, ChatModification.delete)
                 }
-                sendReply(toId, 'sukses leave non whitelist group')
+                client.sendReply(toId, 'sukses leave non whitelist group', m)
               } else if (getComs(txt, 'clearall')) {
                 let allchats = await client.chats.all()
                 let groups = []
@@ -5470,7 +5324,7 @@ async function fnbots(client, messages, asu) {
                 for (let groupIds of arrOfGroupsxxx) {
                   await client.modifyChat(chats, ChatModification.clear)
                 }
-                sendReply(toId, 'sukses!')
+                client.sendReply(toId, 'sukses!', m)
               }
               if (getPrefix(txt, 'broadcast')) {
                 let msg = arg
@@ -5488,7 +5342,7 @@ async function fnbots(client, messages, asu) {
                       await client.sendFile(groupId, imageBase64, filename, `[ ${BotName} Broadcast ]\n\n${msg}`).then(() => console.log(`success resend ${mimetype}`))
                     }
                   }
-                  reply('Broadcast Success!')
+                  client.sendReply(toId, 'Broadcast Success!', m)
                 } else if (isMedia) {
                   const filename = `${t}.${mime.extension(mimetype)}`
                   const mediaData = await decryptMedia(message);
@@ -5503,7 +5357,7 @@ async function fnbots(client, messages, asu) {
                       await client.sendFile(groupId, imageBase64, filename, `[ ${BotName} Broadcast ]\n\n${msg}`).then(() => console.log(`success resend ${mimetype}`))
                     }
                   }
-                  reply('Broadcast Success!')
+                  client.sendReply(toId, 'Broadcast Success!', m)
                 } else {
                   let groups = await client.getAllGroups()
                   let arrOfGroup = []
@@ -5515,7 +5369,7 @@ async function fnbots(client, messages, asu) {
                       await client.sendText(groupId, `[ ${BotName} Broadcast ]\n\n${msg}`)
                     }
                   }
-                  reply('Broadcast Success!')
+                  client.sendReply(toId, 'Broadcast Success!', m)
                 }
               }
             }
@@ -5559,7 +5413,7 @@ async function fnbots(client, messages, asu) {
       await createExif(finebotline, finebotwhatsapp)
       console.log('kontolomatamu')
       const mediaData = await client.downloadMediaMessage(m)
-      if (Buffer.byteLength(mediaData) >= 6186598.4) return sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
+      if (Buffer.byteLength(mediaData) >= 6186598.4) return client.sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`, m)
       modifWebp(jam, mediaData).then(res => {
         client.sendMessage(toId, res, MessageType.sticker, {
           quoted: m
@@ -5599,7 +5453,7 @@ async function fnbots(client, messages, asu) {
       */
       cp += "ℹ️ PS. follow instagram.com/wa.bot, if this bot gets banned, new number will be posted there :)\n"
       cp += "☕️ Buy me a coffee with ```donate``` to support this bot\n"
-      sendText(toId, cp)
+      client.sendText(toId, cp)
     } else
       /*
       if ((txt == "sticker") || (txt == "!sticker") || (txt == ".sticker") || (txt == "#sticker") || (txt == "$sticker")) {
@@ -5608,14 +5462,14 @@ async function fnbots(client, messages, asu) {
         const teks = 'processing data, please wait'
         await createExif(a, b)
         await sleep(3000)
-        await sendReply(toId, teks)
+        await client.sendReply(toId, teks)
         let op = "author: " + a + "\n"
         op += "pack: " + b + "\n"
         op += "name: fnbots"
         if (isMedia && !m.message.imageMessage || isQuotedVideo) {
           const decryptMedia = isQuotedVideo ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
           const mediaData = await client.downloadMediaMessage(decryptMedia)
-          if (Buffer.byteLength(mediaData) >= 6186598.4) return sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
+          if (Buffer.byteLength(mediaData) >= 6186598.4) return client.sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
           modifWebp(jam, mediaData).then(res => {
             client.sendMessage(toId, res, MessageType.sticker, {
               contextInfo: {
@@ -5659,11 +5513,11 @@ async function fnbots(client, messages, asu) {
         const teks = 'processing data, please wait'
         await createExif(a, b)
         await sleep(3000)
-        await sendReply(toId, teks)
+        await client.sendReply(toId, teks)
         if (isMedia && !m.message.imageMessage || isQuotedVideo) {
           const decryptMedia = isQuotedVideo ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
           const mediaData = await client.downloadMediaMessage(decryptMedia)
-          if (Buffer.byteLength(mediaData) >= 6186598.4) return sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
+          if (Buffer.byteLength(mediaData) >= 6186598.4) return client.sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
           let asu = (fs.readFileSync('./image/image.jpg', {
             encoding: 'base64'
           }))
@@ -5808,13 +5662,7 @@ async function fnbots(client, messages, asu) {
   }
 }
 
-starts().catch(e => {
-  console.log('[ERROR]', e)
-  var xsa = new os_spawn();
-  xsa.execCommand(pukimak).catch(err => {
-    console.log("os >>>", err);
-  })
-})
+starts()
 
 process.on('uncaughtException', function (err) {
   let e = String(err)
