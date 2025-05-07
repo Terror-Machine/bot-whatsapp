@@ -57,7 +57,6 @@ const FormData = require('form-data')
 const sort = require('arr-sort')
 const { execSync } = require('child_process');
 const pukimaki = "fnbots"
-const pukimak = "node m.js"
 momenSetup(moments);
 
 let silent = false
@@ -3364,10 +3363,6 @@ async function starts() {
     xi.limitgame = meki
     dumpLimitGame()
     dumpLimit()
-    var xsa = new os_spawn();
-    xsa.execCommand(pukimak).catch(err => {
-      console.log("os >>>", err);
-    })
   })
 
   client.decodeJid = (jid) => {
@@ -3524,7 +3519,7 @@ async function starts() {
 
 }
 //-----------------------util--------------------//
-const fnbots = async (client, m, asu) => {
+async function fnbots(client, m, asu) {
   silent = false;
   origin = false;
   if (asu) {
@@ -3534,7 +3529,7 @@ const fnbots = async (client, m, asu) => {
   }
   try {
     const messageContent = JSON.stringify(m, undefined, 2)
-    console.log(messageContent)
+    // console.log(messageContent)
     const {
       key,
       messageTimestamp,
@@ -3572,9 +3567,9 @@ const fnbots = async (client, m, asu) => {
     const time = moment().format('LTS')
     const timen = moment(messageTimestamp * 1000).format('DD/MM/YY HH:mm:ss')
     const jam = moment.tz('Asia/Jakarta').format('HH:mm:ss')
-    const botNumber = client.user.jid
+    const botNumber = "6281286118629@s.whatsapp.net"
     const isGroup = toId.endsWith('@g.us')
-    const sender = isGroup ? m.participant : m.key.remoteJid
+    const sender = isGroup ? m.key.participant : m.key.remoteJid
     const groupMetadata = isGroup ? await client.groupMetadata(toId) : ''
     const groupName = isGroup ? groupMetadata.subject : ''
     const groupId = isGroup ? groupMetadata.jid : ''
@@ -3596,7 +3591,7 @@ const fnbots = async (client, m, asu) => {
     const finebotwhatsapp = "instagram.com/wa.bot"
     let serial = ""
     if (isGroup) {
-      serial = m.participant
+      serial = m.key.participant
     } else {
       serial = m.key.remoteJid
     }
@@ -3846,7 +3841,6 @@ const fnbots = async (client, m, asu) => {
       })
       if (found !== false) {
         x7.hitcount[found].counts += 1;
-        console.log(x7.hitcount[found].counts)
         dumpCount()
       }
     }
@@ -4151,6 +4145,7 @@ const fnbots = async (client, m, asu) => {
     if ((txt.startsWith(settings.rname) || txt.startsWith(settings.sname)) && counter <= 4) {
       counter++;
       const usr = serial
+      console.log(usr)
       if (recentcmd.has(usr) || sban.has(usr)) {
         if (!(fspamm.has(usr) || (sban.has(usr)))) {
           client.sendTextWithMentions(toId, `*hei @${usr.replace('@s.whatsapp.net', '')} you are on cooldown!*`, null);
@@ -4162,14 +4157,14 @@ const fnbots = async (client, m, asu) => {
       } else {
         for (let aa of cms) {
           if (!isGroup) console.log(color('[EXEC]', 'yellow'), time, color(msgs(aa.toString())), 'from', color(toId))
-          if (isGroup) console.log(color('[EXEC]', 'yellow'), time, color(msgs(aa.toString())), 'from', color(toId), 'in', color(name))
+          if (isGroup) console.log(color('[EXEC]', 'yellow'), time, color(msgs(aa.toString())), 'from', color(toId), 'in', color("group"))
           txt = aa;
           if (isSadmin) {
             ctype = "master"
             if (getComs(txt, 'addwhitelist')) {
               if (isWhite(toId)) return client.sendReply(toId, 'Sudah ada di whitelist', m)
               settings.whitelist.push(toId)
-              dumpSet()
+              await dumpSet()
               client.sendText(toId, 'Success!')
             } else if (getComs(txt, 'delwhitelist')) {
               if (!(isWhite(toId))) return client.sendReply(toId, 'tidak ada di whitelist', m)
@@ -4730,37 +4725,21 @@ const fnbots = async (client, m, asu) => {
                 settings.memberLimit = parseInt(pesan)
                 dumpSet()
                 await client.sendReply(toId, `sukses merubah limit menjadi ${pesan}`, m)
-                var xsa = new os_spawn();
-                xsa.execCommand(pukimak).catch(err => {
-                  console.log("os >>>", err);
-                })
               } else if (getPrefix(txt, 'changegrouplimit')) {
                 const pesan = args[0]
                 settings.groupLimit = parseInt(pesan)
                 dumpSet()
                 await client.sendReply(toId, `sukses merubah limit menjadi ${pesan}`, m)
-                var xsa = new os_spawn();
-                xsa.execCommand(pukimak).catch(err => {
-                  console.log("os >>>", err);
-                })
               } else if (getPrefix(txt, 'changepremiumlimit')) {
                 const pesan = args[0]
                 settings.limitCountPrem = parseInt(pesan)
                 dumpSet()
                 await client.sendReply(toId, `sukses merubah limit menjadi ${pesan}`, m)
-                var xsa = new os_spawn();
-                xsa.execCommand(pukimak).catch(err => {
-                  console.log("os >>>", err);
-                })
               } else if (getPrefix(txt, 'changelimit')) {
                 const pesan = args[0]
                 settings.limitCount = parseInt(pesan)
                 dumpSet()
                 await client.sendReply(toId, `sukses merubah limit menjadi ${pesan}`, m)
-                var xsa = new os_spawn();
-                xsa.execCommand(pukimak).catch(err => {
-                  console.log("os >>>", err);
-                })
               } else if (getComs(txt, "resetlimitall")) {
                 let meki = []
                 for (let i of xc) {
@@ -4776,10 +4755,6 @@ const fnbots = async (client, m, asu) => {
                 await dumpLimitGame()
                 await dumpLimit()
                 await sleep(1000)
-                var xsa = new os_spawn();
-                xsa.execCommand(pukimak).catch(err => {
-                  console.log("os >>>", err);
-                })
                 console.log('[INFO] Limit restarted!')
               } else if (getPrefix(txt, "resetin limit")) {
                 if (isQuotedMsg) {
@@ -5396,267 +5371,6 @@ const fnbots = async (client, m, asu) => {
         counter = 0;
       }, 15000);
     }
-    if (txt == "ctest") {
-      let allchats = await client.chats.all()
-      console.log(allchats)
-    } else if (txt == "kick") {
-      let suroloyo = []
-      suroloyo.push(serial)
-      if (isGroup) {
-        if (isBotGroupAdmins) {
-          client.groupRemove(toId, suroloyo)
-        }
-      }
-    }
-    if (isMediaVideo) {
-      console.log(color('[EXEC]', 'yellow'), time, 'executed video from', color(toId))
-      await createExif(finebotline, finebotwhatsapp)
-      console.log('kontolomatamu')
-      const mediaData = await client.downloadMediaMessage(m)
-      if (Buffer.byteLength(mediaData) >= 6186598.4) return client.sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`, m)
-      modifWebp(jam, mediaData).then(res => {
-        client.sendMessage(toId, res, MessageType.sticker, {
-          quoted: m
-        })
-      })
-    } else
-      if (isMediaImage) {
-        console.log(color('[EXEC]', 'yellow'), time, 'executed image from', color(toId))
-        await createExif(finebotline, finebotwhatsapp)
-        console.log('kontoloke')
-        await client.downloadMediaMessage(m).then(mediaData => {
-          sharp(mediaData).resize({
-            width: 512,
-            height: 512,
-            fit: sharp.fit.contain,
-            background: {
-              r: 0,
-              g: 0,
-              b: 0,
-              alpha: 0
-            }
-          }).webp().toBuffer().then(buffer => {
-            modifExif(buffer, jam, (res) => {
-              client.sendMessage(toId, res, MessageType.sticker, {
-                quoted: m
-              })
-            })
-          })
-        })
-      }
-    if ((txt == "hi") || (txt == "halo") || (txt == "help") || (txt == ".help") || (txt == "!help") || (txt == "#help") || (txt == "/help") || (txt == "commands") || (txt == "menu") || (txt == "bot") || (txt == "cmd")) {
-      let cp = "👋 hello, please send me a video, image, or gif and I'll turn it into a sticker!\n"
-      cp += "📦 If you send a picture/video/gif, then the shape is not a square, then I will change it to contain sticker!\n"
-      /*
-      cp += "ℹ️ PS. You can change author name and sticker pack name if you send\n\n"
-      cp += "        ```sticker``` *authorpack | packname*\n\n"
-      */
-      cp += "ℹ️ PS. follow instagram.com/wa.bot, if this bot gets banned, new number will be posted there :)\n"
-      cp += "☕️ Buy me a coffee with ```donate``` to support this bot\n"
-      client.sendText(toId, cp)
-    } else
-      /*
-      if ((txt == "sticker") || (txt == "!sticker") || (txt == ".sticker") || (txt == "#sticker") || (txt == "$sticker")) {
-        const a = "created by: fnbots"
-        const b = "fine ganteng banget"
-        const teks = 'processing data, please wait'
-        await createExif(a, b)
-        await sleep(3000)
-        await client.sendReply(toId, teks)
-        let op = "author: " + a + "\n"
-        op += "pack: " + b + "\n"
-        op += "name: fnbots"
-        if (isMedia && !m.message.imageMessage || isQuotedVideo) {
-          const decryptMedia = isQuotedVideo ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
-          const mediaData = await client.downloadMediaMessage(decryptMedia)
-          if (Buffer.byteLength(mediaData) >= 6186598.4) return client.sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
-          modifWebp(jam, mediaData).then(res => {
-            client.sendMessage(toId, res, MessageType.sticker, {
-              contextInfo: {
-                participant: "628128611862@s.whatsapp.net",
-                quotedMessage: {
-                  conversation: op
-                }
-              }
-            })
-          })
-        } else
-        if (isMedia && !m.message.videoMessage || isQuotedImage) {
-          const decryptMedia = isQuotedImage ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
-          let asu = (fs.readFileSync('./image/image.jpg', {
-            encoding: 'base64'
-          }))
-          const roundedCorners = Buffer.from(
-            '<svg><rect x="0" y="0" width="600" height="600" rx="300" ry="300"/></svg>'
-          );
-          await client.downloadMediaMessage(decryptMedia).then(mediaData => {
-            sharp(mediaData).resize({
-              width: 600,
-              height: 600
-            }).composite([{
-              input: roundedCorners,
-              blend: 'dest-in'
-            }]).webp().toBuffer().then(buffer => {
-              modifExif(buffer, jam, (res) => {
-                client.sendMessage(toId, res, MessageType.sticker, {
-                  quoted: m,
-                  thumbnail: asu.toString("base64")
-                })
-              })
-            })
-          })
-        }
-      } else 
-      if (txt.startsWith("sticker")) {
-        const a = arg.split('|')[0]
-        const b = arg.split('|')[1]
-        const teks = 'processing data, please wait'
-        await createExif(a, b)
-        await sleep(3000)
-        await client.sendReply(toId, teks)
-        if (isMedia && !m.message.imageMessage || isQuotedVideo) {
-          const decryptMedia = isQuotedVideo ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
-          const mediaData = await client.downloadMediaMessage(decryptMedia)
-          if (Buffer.byteLength(mediaData) >= 6186598.4) return client.sendReply(toId, `sizenya terlalu gede sayang, dd gakuat :( max 5,9mb`)
-          let asu = (fs.readFileSync('./image/image.jpg', {
-            encoding: 'base64'
-          }))
-          modifWebp(jam, mediaData).then(res => {
-            client.sendMessage(toId, res, MessageType.sticker, {
-              quoted: m,
-              thumbnail: asu.toString("base64")
-            })
-          })
-        } else if (isMedia && !m.message.videoMessage || isQuotedImage) {
-          const decryptMedia = isQuotedImage ? JSON.parse(JSON.stringify(m).replace('quotedM', 'm')).message.extendedTextMessage.contextInfo : m
-          let asu = (fs.readFileSync('./image/image.jpg', {
-            encoding: 'base64'
-          }))
-          await client.downloadMediaMessage(decryptMedia).then(mediaData => {
-            sharp(mediaData).resize({
-              width: 512,
-              height: 512,
-              fit: sharp.fit.contain,
-              background: {
-                r: 0,
-                g: 0,
-                b: 0,
-                alpha: 0
-              }
-            }).webp().toBuffer().then(buffer => {
-              modifExif(buffer, jam, (res) => {
-                client.sendMessage(toId, res, MessageType.sticker, {
-                  quoted: m,
-                  thumbnail: asu.toString("base64")
-                })
-              })
-            })
-          })
-        }
-      } else 
-      */
-      if (txt == "me") {
-        if (isGroup) {
-          const num = m.participant
-          const picture = num.replace("@s.whatsapp.net", "")
-          let pict = ""
-          try {
-            pict = await client.getProfilePicture(picture)
-          } catch {
-            pict = "https://user-images.githubusercontent.com/70086013/103155250-749abe00-47d0-11eb-82b1-5b3a4f3182f8.jpg"
-          }
-          pict = pict
-          const response = await axios({
-            method: "get",
-            url: pict,
-            responseType: 'arraybuffer'
-          })
-          let status = await client.getStatus(picture)
-          let teks = `Name: @${num.split('@')[0]}\n`
-          teks += `Status: ${status.status}`
-          let asu = (fs.readFileSync('./image/image.jpg', {
-            encoding: 'base64'
-          }))
-          client.sendMessage(toId, response.data, MessageType.image, {
-            caption: teks,
-            thumbnail: asu.toString("base64"),
-            contextInfo: {
-              "mentionedJid": [num]
-            }
-          })
-        } else {
-          num = toId
-          const picture = num.replace("@s.whatsapp.net", "")
-          let pict = ""
-          try {
-            pict = await client.getProfilePicture(picture)
-          } catch {
-            pict = "https://user-images.githubusercontent.com/70086013/103155250-749abe00-47d0-11eb-82b1-5b3a4f3182f8.jpg"
-          }
-          const response = await axios({
-            method: "get",
-            url: pict,
-            responseType: 'arraybuffer'
-          })
-          let status = await client.getStatus(picture)
-          let teks = `Name: @${num.split('@')[0]}\n`
-          teks += `Status: ${status.status}`
-          let asu = (fs.readFileSync('./image/image.jpg', {
-            encoding: 'base64'
-          }))
-          client.sendMessage(toId, response.data, MessageType.image, {
-            caption: teks,
-            thumbnail: asu.toString("base64"),
-            contextInfo: {
-              "mentionedJid": [num]
-            }
-          })
-        }
-      } else
-        if (txt.startsWith("fakereply")) {
-          if (isGroup) {
-            const a = arg.split('|')[0]
-            const b = arg.split('|')[1]
-            const mentionedJidList = m.message.extendedTextMessage.contextInfo.mentionedJid
-            client.sendMessage(toId, a, MessageType.text, {
-              contextInfo: {
-                participant: mentionedJidList[0],
-                quotedMessage: {
-                  conversation: b
-                }
-              }
-            })
-          } else {
-            const a = arg.split('|')[0]
-            const b = arg.split('|')[1]
-            client.sendMessage(toId, a, MessageType.text, {
-              contextInfo: {
-                participant: toId,
-                quotedMessage: {
-                  conversation: b
-                }
-              }
-            })
-          }
-        } else
-          if (txt == "stfu") {
-            if (!isSadmin) return
-            const more = String.fromCharCode(8206)
-            const readMore = more.repeat(4001)
-            members_id = []
-            teks = 'woi jangan buka' + readMore + '😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙😢🤖🤖🤣🥰😭😃😄😆😇😉😙😀😃😄😁😆😅😂🤣🥲🥲☺️😊😇🙂🙃😉😌😍🥰😘😗😙'
-            for (let mem of groupMembers) {
-              members_id.push(mem.jid)
-            }
-            const tag = {
-              text: teks,
-              contextInfo: {
-                mentionedJid: members_id
-              }
-            }
-            await client.sendMessage(toId, tag, text)
-            await client.modifyChat(toId, ChatModification.clear)
-          }
   } catch (err) {
     console.log(err)
   }
